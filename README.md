@@ -1,5 +1,4 @@
-# Server Template
-
+# pserver_template
 A FastAPI server template with pre-built application structure, asynchronous backend-neutral persistence, authentication/RBAC support, and a CLI scaffolder.
 
 Use this repository as a starting point for small API services that need a clean baseline layout instead of starting from an empty FastAPI project.
