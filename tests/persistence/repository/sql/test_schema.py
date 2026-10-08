@@ -4,13 +4,12 @@ from typing import cast, override
 
 import pytest
 
-from server.auth.authorization_service import UserRole
-from server.auth.rbac.models import Permission, Role, RolePermission
+from server.auth.rbac.models import Permission, Role, RolePermission, UserRole
 from server.models.base.entity import Entity
 from server.models.base.id import Id
 from server.persistence.models import CHECK, FOREIGN_KEY, UNIQUE, field
-from server.persistence.repository.sql.postgres.ast.exceptions import TableParsingException
-from server.persistence.repository.sql.postgres.schema import generate_schema_ddl_operations
+from server.persistence.repository.sql.ast.exceptions import TableParsingException
+from server.persistence.repository.sql.schema import generate_schema_ddl_operations
 from server.users.user import User
 
 # Region Test Types
@@ -33,7 +32,7 @@ class TestTypesEntity(Entity()):
 
 @dataclass
 class TestFKEntity(Entity()):
-    fk_field: str = field(FOREIGN_KEY("test_types_entities.id"))
+    fk_field: Id = field(FOREIGN_KEY("test_types_entities.id"))
 
     @override
     @staticmethod
@@ -60,145 +59,163 @@ class TestCheckConstraintEntity(Entity()):
     def table_name() -> str:
         return "test_check_constraint_entities"
 
+
+CREATE_TEST_TYPES_ENTITIES = (
+    "CREATE TABLE test_types_entities (\n"
+    "id TEXT NOT NULL,\n"
+    "created_date TIMESTAMP NOT NULL,\n"
+    "updated_date TIMESTAMP NOT NULL,\n"
+    "date_f TIMESTAMP NOT NULL,\n"
+    "float_f DOUBLE PRECISION NOT NULL,\n"
+    "int_f INTEGER NOT NULL,\n"
+    "str_f TEXT NOT NULL,\n"
+    "dict_f JSONB NOT NULL,\n"
+    "list_f JSONB NOT NULL,\n"
+    "bool_f BOOLEAN NOT NULL\n"
+    ");"
+)
+
+ALTER_TEST_TYPES_ENTITIES = (
+    "ALTER TABLE test_types_entities \n"
+    "ADD CONSTRAINT pk_test_types_entities_id PRIMARY KEY (id)\n"
+)
+
 # Region Tests
 
 def test_generate_schema_ddl_operations_creates_proper_types() -> None:
     operations = generate_schema_ddl_operations([TestTypesEntity])
-    assert operations[0] == (
-        'CREATE TABLE test_types_entities (\n'
-        '  "id" TEXT PRIMARY KEY,\n'
-        '  "created_date" TIMESTAMP,\n'
-        '  "updated_date" TIMESTAMP,\n'
-        '  "date_f" TIMESTAMP,\n'
-        '  "float_f" DOUBLE PRECISION,\n'
-        '  "int_f" INTEGER,\n'
-        '  "str_f" TEXT,\n'
-        '  "dict_f" JSONB,\n'
-        '  "list_f" JSONB,\n'
-        '  "bool_f" BOOLEAN\n'
-        ');'
-    )
+    assert operations == [
+        CREATE_TEST_TYPES_ENTITIES,
+        "\n",
+        ALTER_TEST_TYPES_ENTITIES,
+    ]
 
 
 def test_generate_schema_ddl_operations_creates_foreign_keys() -> None:
     operations = generate_schema_ddl_operations([TestTypesEntity, TestFKEntity])
-    assert operations[0] == (
-        'CREATE TABLE test_types_entities (\n'
-        '  "id" TEXT PRIMARY KEY,\n'
-        '  "created_date" TIMESTAMP,\n'
-        '  "updated_date" TIMESTAMP,\n'
-        '  "date_f" TIMESTAMP,\n'
-        '  "float_f" DOUBLE PRECISION,\n'
-        '  "int_f" INTEGER,\n'
-        '  "str_f" TEXT,\n'
-        '  "dict_f" JSONB,\n'
-        '  "list_f" JSONB,\n'
-        '  "bool_f" BOOLEAN\n'
-        ');'
-    )
-    assert operations[1] == (
-        'CREATE TABLE test_fk_entities (\n'
-        '  "id" TEXT PRIMARY KEY,\n'
-        '  "created_date" TIMESTAMP,\n'
-        '  "updated_date" TIMESTAMP,\n'
-        '  "fk_field" TEXT\n'
-        ');'
-    )
-    assert operations[2] == (
-        "ALTER TABLE test_fk_entities\n "
-        "ADD CONSTRAINT fk_test_fk_entities_test_types_entities FOREIGN KEY (fk_field) REFERENCES test_types_entities(id);"
-    )
+    assert operations == [
+        CREATE_TEST_TYPES_ENTITIES,
+        "CREATE TABLE test_fk_entities (\n"
+        "id TEXT NOT NULL,\n"
+        "created_date TIMESTAMP NOT NULL,\n"
+        "updated_date TIMESTAMP NOT NULL,\n"
+        "fk_field TEXT NOT NULL\n"
+        ");",
+        "\n",
+        ALTER_TEST_TYPES_ENTITIES,
+        "ALTER TABLE test_fk_entities \n"
+        "ADD CONSTRAINT pk_test_fk_entities_id PRIMARY KEY (id),\n"
+        "ADD CONSTRAINT fk_test_fk_entities_fk_field FOREIGN KEY (fk_field) "
+        "REFERENCES test_types_entities (id)\n",
+    ]
 
 
 def test_generate_schema_ddl_operations_creates_unique_constraints() -> None:
     operations = generate_schema_ddl_operations([TestUniqueEntity])
-    assert operations[0] == (
-        'CREATE TABLE test_unique_entities (\n'
-        '  "id" TEXT PRIMARY KEY,\n'
-        '  "created_date" TIMESTAMP,\n'
-        '  "updated_date" TIMESTAMP,\n'
-        '  "unique_field" TEXT\n'
-        ');'
-    )
-    assert operations[1] == (
-        "ALTER TABLE test_unique_entities\n "
-        "ADD CONSTRAINT uq_test_unique_entities_unique_field UNIQUE (unique_field);"
-    )
+    assert operations == [
+        "CREATE TABLE test_unique_entities (\n"
+        "id TEXT NOT NULL,\n"
+        "created_date TIMESTAMP NOT NULL,\n"
+        "updated_date TIMESTAMP NOT NULL,\n"
+        "unique_field TEXT NOT NULL\n"
+        ");",
+        "\n",
+        "ALTER TABLE test_unique_entities \n"
+        "ADD CONSTRAINT pk_test_unique_entities_id PRIMARY KEY (id),\n"
+        "ADD CONSTRAINT uq_test_unique_entities_unique_field UNIQUE (unique_field)\n",
+    ]
 
 
 def test_generate_schema_ddl_operations_creates_check_constraints() -> None:
     operations = generate_schema_ddl_operations([TestCheckConstraintEntity])
-    assert operations[0] == (
-        'CREATE TABLE test_check_constraint_entities (\n'
-        '  "id" TEXT PRIMARY KEY,\n'
-        '  "created_date" TIMESTAMP,\n'
-        '  "updated_date" TIMESTAMP,\n'
-        '  "check_field" INTEGER\n'
-        ');'
-    )
-    assert operations[1] == (
-        "ALTER TABLE test_check_constraint_entities\n "
-        "ADD CONSTRAINT chk_test_check_constraint_entities_check_field CHECK (check_field > 0);"
-    )
-
-
-def test_generate_schema_ddl_operations_creates_role_permission_foreign_keys() -> None:
-    operations = generate_schema_ddl_operations([Permission, Role, RolePermission, User, UserRole])
-    assert operations[:5] == [
-        'CREATE TABLE permissions (\n'
-        '  "id" TEXT PRIMARY KEY,\n'
-        '  "created_date" TIMESTAMP,\n'
-        '  "updated_date" TIMESTAMP,\n'
-        '  "key" TEXT NOT NULL,\n'
-        '  "description" TEXT DEFAULT NULL\n'
-        ');',
-        'CREATE TABLE roles (\n'
-        '  "id" TEXT PRIMARY KEY,\n'
-        '  "created_date" TIMESTAMP,\n'
-        '  "updated_date" TIMESTAMP,\n'
-        '  "name" TEXT NOT NULL,\n'
-        '  "description" TEXT DEFAULT NULL\n'
-        ');',
-        'CREATE TABLE role_permissions (\n'
-        '  "id" TEXT PRIMARY KEY,\n'
-        '  "created_date" TIMESTAMP,\n'
-        '  "updated_date" TIMESTAMP,\n'
-        '  "role_id" TEXT NOT NULL,\n'
-        '  "permission_id" TEXT NOT NULL\n'
-        ');',
-        'CREATE TABLE users (\n'
-        '  "id" TEXT PRIMARY KEY,\n'
-        '  "created_date" TIMESTAMP,\n'
-        '  "updated_date" TIMESTAMP,\n'
-        '  "user_name" TEXT NOT NULL,\n'
-        '  "first_name" TEXT NOT NULL,\n'
-        '  "last_name" TEXT NOT NULL,\n'
-        '  "password_hash" TEXT NOT NULL,\n'
-        '  "email" TEXT NOT NULL,\n'
-        '  "email_verified" BOOLEAN DEFAULT NULL\n'
-        ');',
-        'CREATE TABLE user_roles (\n'
-        '  "id" TEXT PRIMARY KEY,\n'
-        '  "created_date" TIMESTAMP,\n'
-        '  "updated_date" TIMESTAMP,\n'
-        '  "user_id" TEXT NOT NULL,\n'
-        '  "role_id" TEXT NOT NULL\n'
-        ');',
+    assert operations == [
+        "CREATE TABLE test_check_constraint_entities (\n"
+        "id TEXT NOT NULL,\n"
+        "created_date TIMESTAMP NOT NULL,\n"
+        "updated_date TIMESTAMP NOT NULL,\n"
+        "check_field INTEGER NOT NULL\n"
+        ");",
+        "\n",
+        "ALTER TABLE test_check_constraint_entities \n"
+        "ADD CONSTRAINT pk_test_check_constraint_entities_id PRIMARY KEY (id),\n"
+        "ADD CONSTRAINT chk_test_check_constraint_entities_check_field CHECK (check_field > 0)\n",
     ]
-    assert operations[5:] == [
-        "ALTER TABLE roles\n "
-        "ADD CONSTRAINT uq_roles_name UNIQUE (name);",
 
-        "ALTER TABLE role_permissions\n "
-        "ADD CONSTRAINT fk_role_permissions_roles FOREIGN KEY (role_id) REFERENCES roles(id),\n  "
-        "ADD CONSTRAINT fk_role_permissions_permissions FOREIGN KEY (permission_id) REFERENCES permissions(id);",
 
-        "ALTER TABLE users\n "
-        "ADD CONSTRAINT uq_users_email UNIQUE (email);",
+def test_generate_schema_ddl_operations_creates_role_permission_schema() -> None:
+    operations = generate_schema_ddl_operations([Permission, Role, RolePermission, User, UserRole])
+    assert operations == [
+        "CREATE TABLE permissions (\n"
+        "id TEXT NOT NULL,\n"
+        "created_date TIMESTAMP NOT NULL,\n"
+        "updated_date TIMESTAMP NOT NULL,\n"
+        "key TEXT NOT NULL,\n"
+        "description TEXT\n"
+        ");"
+        "CREATE INDEX idx_permissions_key ON permissions (key);",
 
-        "ALTER TABLE user_roles\n "
-        "ADD CONSTRAINT fk_user_roles_users FOREIGN KEY (user_id) REFERENCES users(id),\n  "
-        "ADD CONSTRAINT fk_user_roles_roles FOREIGN KEY (role_id) REFERENCES roles(id);"
+        "CREATE TABLE roles (\n"
+        "id TEXT NOT NULL,\n"
+        "created_date TIMESTAMP NOT NULL,\n"
+        "updated_date TIMESTAMP NOT NULL,\n"
+        "name TEXT NOT NULL,\n"
+        "description TEXT\n"
+        ");"
+        "CREATE INDEX idx_roles_name ON roles (name);",
+
+        "CREATE TABLE role_permissions (\n"
+        "id TEXT NOT NULL,\n"
+        "created_date TIMESTAMP NOT NULL,\n"
+        "updated_date TIMESTAMP NOT NULL,\n"
+        "role_id TEXT NOT NULL,\n"
+        "permission_id TEXT NOT NULL\n"
+        ");",
+
+        "CREATE TABLE users (\n"
+        "id TEXT NOT NULL,\n"
+        "created_date TIMESTAMP NOT NULL,\n"
+        "updated_date TIMESTAMP NOT NULL,\n"
+        "user_name TEXT NOT NULL,\n"
+        "first_name TEXT NOT NULL,\n"
+        "last_name TEXT NOT NULL,\n"
+        "password_hash TEXT NOT NULL,\n"
+        "email TEXT NOT NULL,\n"
+        "email_verified BOOLEAN NOT NULL\n"
+        ");"
+        "CREATE INDEX idx_users_user_name ON users (user_name);"
+        "CREATE INDEX idx_users_email ON users (email);",
+
+        "CREATE TABLE user_roles (\n"
+        "id TEXT NOT NULL,\n"
+        "created_date TIMESTAMP NOT NULL,\n"
+        "updated_date TIMESTAMP NOT NULL,\n"
+        "user_id TEXT NOT NULL,\n"
+        "role_id TEXT NOT NULL\n"
+        ");",
+
+        "\n",
+
+        "ALTER TABLE permissions \n"
+        "ADD CONSTRAINT pk_permissions_id PRIMARY KEY (id)\n",
+
+        "ALTER TABLE roles \n"
+        "ADD CONSTRAINT pk_roles_id PRIMARY KEY (id),\n"
+        "ADD CONSTRAINT uq_roles_name UNIQUE (name)\n",
+
+        "ALTER TABLE role_permissions \n"
+        "ADD CONSTRAINT pk_role_permissions_id PRIMARY KEY (id),\n"
+        "ADD CONSTRAINT fk_role_permissions_role_id FOREIGN KEY (role_id) REFERENCES roles (id),\n"
+        "ADD CONSTRAINT fk_role_permissions_permission_id FOREIGN KEY (permission_id) "
+        "REFERENCES permissions (id)\n",
+
+        "ALTER TABLE users \n"
+        "ADD CONSTRAINT pk_users_id PRIMARY KEY (id),\n"
+        "ADD CONSTRAINT uq_users_email UNIQUE (email)\n",
+
+        "ALTER TABLE user_roles \n"
+        "ADD CONSTRAINT pk_user_roles_id PRIMARY KEY (id),\n"
+        "ADD CONSTRAINT fk_user_roles_user_id FOREIGN KEY (user_id) REFERENCES users (id),\n"
+        "ADD CONSTRAINT fk_user_roles_role_id FOREIGN KEY (role_id) REFERENCES roles (id)\n",
     ]
 
 

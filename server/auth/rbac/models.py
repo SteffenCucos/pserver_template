@@ -36,6 +36,8 @@ class UserRole(Entity()):  # type: ignore[misc]
     user_id: Id = field(NOT_NULLABLE | FOREIGN_KEY("users.id"))
     role_id: Id = field(NOT_NULLABLE | FOREIGN_KEY("roles.id"))
 
+
+
     @override
     @staticmethod
     def table_name() -> str:

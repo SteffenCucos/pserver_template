@@ -4,15 +4,28 @@ from typing import cast, override
 
 import pytest
 
-from server.auth.authorization_service import UserRole
-from server.auth.rbac.models import Permission, Role, RolePermission
+from server.auth.rbac.models import Permission, Role, RolePermission, UserRole
 from server.models.base.entity import Entity, IdEntity
 from server.models.base.id import Id
-from server.persistence.models import CHECK, FOREIGN_KEY, NOT_NULLABLE, UNIQUE, field
-from server.persistence.repository.sql.postgres.ast.ast_data_types import DataType
-from server.persistence.repository.sql.postgres.ast.ast_table import ASTTable
-from server.persistence.repository.sql.postgres.ast.exceptions import TableParsingException
-from server.persistence.repository.sql.postgres.ast.parse import parse_entities_to_tables
+from server.persistence.models import (
+    CHECK,
+    FOREIGN_KEY,
+    INDEX,
+    NOT_NULLABLE,
+    NULLABLE,
+    PRIMARY_KEY,
+    UNIQUE,
+    field,
+)
+from server.persistence.repository.sql.ast.data_types import DataType
+from server.persistence.repository.sql.ast.exceptions import (
+    FieldParsingException,
+    TableParsingException,
+)
+from server.persistence.repository.sql.ast.nodes.column_node import ColumnNode
+from server.persistence.repository.sql.ast.nodes.foreign_key_node import ForeignKeyNode
+from server.persistence.repository.sql.ast.nodes.table_node import TableNode
+from server.persistence.repository.sql.ast.parse import parse_entities_to_tables
 from server.users.user import User
 
 
@@ -25,8 +38,22 @@ class Parent(Entity()):  # type: ignore[misc]
         return "parents"
 
 
-def parse(*entities: type[IdEntity]) -> list[ASTTable]:
+def parse(*entities: type[IdEntity]) -> list[TableNode]:
     return parse_entities_to_tables(list(entities))
+
+
+def columns_by_name(table: TableNode) -> dict[str, ColumnNode]:
+    return {column.name: column for column in table.columns}
+
+
+def describe_foreign_key(foreign_key: ForeignKeyNode) -> tuple[str, list[str], str, list[str]]:
+    table, columns = foreign_key.references
+    return (
+        foreign_key.name,
+        [column.name for column in foreign_key.columns],
+        table.name,
+        [column.name for column in columns],
+    )
 
 
 @dataclass
@@ -43,6 +70,18 @@ class TypesEntity(Entity()):
     @staticmethod
     def table_name() -> str:
         return "types_entities"
+
+
+@dataclass
+class NullabilityEntity(Entity()):
+    required: str
+    nullable_by_metadata: str = field(NULLABLE)
+    optional: str | None = None
+
+    @override
+    @staticmethod
+    def table_name() -> str:
+        return "nullability_entities"
 
 
 @dataclass
@@ -75,47 +114,105 @@ class CheckEntity(Entity()):
         return "check_entities"
 
 
-def test_parse_entities_to_tables_maps_python_types_to_ast_fields() -> None:
+@dataclass
+class IndexEntity(Entity()):
+    value: str = field(INDEX())
+
+    @override
+    @staticmethod
+    def table_name() -> str:
+        return "index_entities"
+
+
+def test_parse_entities_to_tables_maps_fields_to_columns() -> None:
     table = parse(TypesEntity)[0]
 
     assert table.name == "types_entities"
-    assert table.fields_by_name["id"].data_type is DataType.TEXT
-    assert table.fields_by_name["id"].is_primary_key
-    assert table.fields_by_name["created_date"].data_type is DataType.TIMESTAMP
-    assert table.fields_by_name["updated_date"].data_type is DataType.TIMESTAMP
-    assert {
-        field_name: table.fields_by_name[field_name].data_type
-        for field_name in ("date_f", "float_f", "int_f", "str_f", "dict_f", "list_f", "bool_f")
-    } == {
-        "date_f": DataType.TIMESTAMP,
-        "float_f": DataType.DOUBLE_PRECISION,
-        "int_f": DataType.INTEGER,
-        "str_f": DataType.TEXT,
-        "dict_f": DataType.JSONB,
-        "list_f": DataType.JSONB,
-        "bool_f": DataType.BOOLEAN,
-    }
+    assert [(column.name, column.type) for column in table.columns] == [
+        ("id", DataType.TEXT),
+        ("created_date", DataType.TIMESTAMP),
+        ("updated_date", DataType.TIMESTAMP),
+        ("date_f", DataType.TIMESTAMP),
+        ("float_f", DataType.DOUBLE_PRECISION),
+        ("int_f", DataType.INTEGER),
+        ("str_f", DataType.TEXT),
+        ("dict_f", DataType.JSON),
+        ("list_f", DataType.JSON),
+        ("bool_f", DataType.BOOLEAN),
+    ]
 
 
-def test_parse_entities_to_tables_resolves_foreign_keys_to_ast_references() -> None:
+def test_parse_entities_to_tables_derives_nullability_from_type_and_metadata() -> None:
+    columns = columns_by_name(parse(NullabilityEntity)[0])
+
+    assert not columns["required"].nullable
+    assert columns["nullable_by_metadata"].nullable
+    assert columns["optional"].nullable
+
+
+def test_parse_entities_to_tables_rejects_not_nullable_metadata_on_optional_types() -> None:
+    @dataclass
+    class ContradictoryNullability(Entity()):  # type: ignore[misc]
+        value: str | None = field(NOT_NULLABLE)
+
+        @staticmethod
+        def table_name() -> str:
+            return "contradictory_nullability"
+
+    with pytest.raises(
+        FieldParsingException,
+        match="Field 'value' is marked as non nullable in its metadata but is typed as nullable",
+    ):
+        parse(ContradictoryNullability)
+
+
+def test_parse_entities_to_tables_creates_primary_key_on_id() -> None:
+    table = parse(TypesEntity)[0]
+
+    assert table.primary_key is not None
+    assert table.primary_key.name == "pk_types_entities_id"
+    assert table.primary_key.columns == [columns_by_name(table)["id"]]
+
+
+def test_parse_entities_to_tables_resolves_foreign_keys_to_nodes() -> None:
     target_table, foreign_key_table = parse(TypesEntity, ForeignKeyEntity)
 
-    foreign_key = foreign_key_table.fields_by_name["target_id"].foreign_key
-    assert isinstance(foreign_key, tuple)
-    assert foreign_key[0] is target_table
-    assert foreign_key[1] is target_table.fields_by_name["id"]
+    assert foreign_key_table.foreign_keys is not None
+    [foreign_key] = foreign_key_table.foreign_keys
+    assert foreign_key.name == "fk_foreign_key_entities_target_id"
+    assert foreign_key.columns == [columns_by_name(foreign_key_table)["target_id"]]
+
+    referenced_table, referenced_columns = foreign_key.references
+    assert referenced_table is target_table
+    assert len(referenced_columns) == 1
+    assert referenced_columns[0] is columns_by_name(target_table)["id"]
 
 
-def test_parse_entities_to_tables_preserves_unique_constraints() -> None:
+def test_parse_entities_to_tables_creates_unique_constraints() -> None:
     table = parse(UniqueEntity)[0]
 
-    assert table.fields_by_name["value"].is_unique
+    assert table.unique_constraints is not None
+    [unique_constraint] = table.unique_constraints
+    assert unique_constraint.name == "uq_unique_entities_value"
+    assert unique_constraint.columns == [columns_by_name(table)["value"]]
 
 
-def test_parse_entities_to_tables_preserves_check_constraints() -> None:
+def test_parse_entities_to_tables_creates_check_constraints() -> None:
     table = parse(CheckEntity)[0]
 
-    assert table.fields_by_name["value"].check_constraint == "value > 0"
+    assert table.check_constraints is not None
+    [check_constraint] = table.check_constraints
+    assert check_constraint.name == "chk_check_entities_value"
+    assert check_constraint.constraint == "value > 0"
+
+
+def test_parse_entities_to_tables_creates_indexes() -> None:
+    table = parse(IndexEntity)[0]
+
+    assert table.indexes is not None
+    [index] = table.indexes
+    assert index.name == "idx_index_entities_value"
+    assert index.columns == [columns_by_name(table)["value"]]
 
 
 def test_parse_entities_to_tables_resolves_role_permission_relationships() -> None:
@@ -124,18 +221,32 @@ def test_parse_entities_to_tables_resolves_role_permission_relationships() -> No
 
     assert set(tables_by_name) == {"permissions", "roles", "role_permissions", "users", "user_roles"}
 
-    role_permission = tables_by_name["role_permissions"]
-    role_foreign_key = role_permission.fields_by_name["role_id"].foreign_key
-    permission_foreign_key = role_permission.fields_by_name["permission_id"].foreign_key
-    assert role_foreign_key == (tables_by_name["roles"], tables_by_name["roles"].fields_by_name["id"])
-    assert permission_foreign_key == (
-        tables_by_name["permissions"],
-        tables_by_name["permissions"].fields_by_name["id"],
-    )
+    role_permission_foreign_keys = tables_by_name["role_permissions"].foreign_keys or []
+    assert [describe_foreign_key(fk) for fk in role_permission_foreign_keys] == [
+        ("fk_role_permissions_role_id", ["role_id"], "roles", ["id"]),
+        ("fk_role_permissions_permission_id", ["permission_id"], "permissions", ["id"]),
+    ]
 
-    user_role = tables_by_name["user_roles"]
-    user_foreign_key = user_role.fields_by_name["user_id"].foreign_key
-    assert user_foreign_key == (tables_by_name["users"], tables_by_name["users"].fields_by_name["id"])
+    user_role_foreign_keys = tables_by_name["user_roles"].foreign_keys or []
+    assert [describe_foreign_key(fk) for fk in user_role_foreign_keys] == [
+        ("fk_user_roles_user_id", ["user_id"], "users", ["id"]),
+        ("fk_user_roles_role_id", ["role_id"], "roles", ["id"]),
+    ]
+
+
+def test_parse_entities_to_tables_rejects_multiple_primary_keys() -> None:
+    @dataclass
+    class TwoPrimaryKeys(Entity()):  # type: ignore[misc]
+        other_id: Id = field(PRIMARY_KEY)
+
+        @staticmethod
+        def table_name() -> str:
+            return "two_primary_keys"
+
+    with pytest.raises(
+        TableParsingException, match="Multiple primary keys defined for table 'two_primary_keys'"
+    ):
+        parse(TwoPrimaryKeys)
 
 
 def test_parse_entities_to_tables_rejects_non_string_foreign_keys() -> None:
