@@ -1,3 +1,4 @@
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -35,8 +36,6 @@ class Role(Entity("name")):  # type: ignore[misc]
 class UserRole(Entity()):  # type: ignore[misc]
     user_id: Id = field(NOT_NULLABLE | FOREIGN_KEY("users.id"))
     role_id: Id = field(NOT_NULLABLE | FOREIGN_KEY("roles.id"))
-
-
 
     @override
     @staticmethod

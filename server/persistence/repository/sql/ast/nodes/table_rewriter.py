@@ -1,15 +1,14 @@
 
 from typing import override
-from abc import abstractmethod
 
 from ..visitor import Visitor
-from .foreign_key_node import ForeignKeyNode
-from .column_node import ColumnNode
-from .table_node import TableNode
-from .primary_key_node import PrimaryKeyNode
-from .index_node import IndexNode
-from .unique_constraint_node import UniqueCheckConstraintNode
 from .check_constraint_node import CheckConstraintNode
+from .column_node import ColumnNode
+from .foreign_key_node import ForeignKeyNode
+from .index_node import IndexNode
+from .primary_key_node import PrimaryKeyNode
+from .table_node import TableNode
+from .unique_constraint_node import UniqueCheckConstraintNode
 
 
 class TableRewriter(Visitor):

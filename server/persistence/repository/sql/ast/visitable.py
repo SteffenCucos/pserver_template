@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 
 from .visitor import Visitor
 
+
 class Visitable(ABC):
 
     @abstractmethod

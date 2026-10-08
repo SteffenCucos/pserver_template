@@ -6,13 +6,13 @@ from typing import TYPE_CHECKING
 
 # Nodes import Visitor, so these are only needed for type checking
 if TYPE_CHECKING:
-    from .nodes.foreign_key_node import ForeignKeyNode
-    from .nodes.column_node import ColumnNode
-    from .nodes.table_node import TableNode
-    from .nodes.primary_key_node import PrimaryKeyNode
-    from .nodes.unique_constraint_node import UniqueCheckConstraintNode
     from .nodes.check_constraint_node import CheckConstraintNode
+    from .nodes.column_node import ColumnNode
+    from .nodes.foreign_key_node import ForeignKeyNode
     from .nodes.index_node import IndexNode
+    from .nodes.primary_key_node import PrimaryKeyNode
+    from .nodes.table_node import TableNode
+    from .nodes.unique_constraint_node import UniqueCheckConstraintNode
 
 
 class Visitor(ABC):

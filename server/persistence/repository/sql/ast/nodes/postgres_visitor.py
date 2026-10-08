@@ -2,13 +2,13 @@
 from typing import override
 
 from ..visitor import Visitor
-from .column_node import ColumnNode
-from .table_node import TableNode
-from .primary_key_node import PrimaryKeyNode
-from .unique_constraint_node import UniqueCheckConstraintNode
-from .foreign_key_node import ForeignKeyNode
 from .check_constraint_node import CheckConstraintNode
+from .column_node import ColumnNode
+from .foreign_key_node import ForeignKeyNode
 from .index_node import IndexNode
+from .primary_key_node import PrimaryKeyNode
+from .table_node import TableNode
+from .unique_constraint_node import UniqueCheckConstraintNode
 
 
 class PostgresVisitor(Visitor):
@@ -52,11 +52,11 @@ class PostgresVisitor(Visitor):
         fk_name = foreign_key.name
         fk_columns = [c.name for c in foreign_key.columns]
         ref_table, ref_columns = foreign_key.references
-        ref_columns = [c.name for c in ref_columns]
+        ref_column_names = list(map(lambda c: c.name, ref_columns))
         ref_table_name = ref_table.name
         fk_statement = f"CONSTRAINT {fk_name} " if fk_name else ""
         self.constraints.append(
-            f"{fk_statement}FOREIGN KEY ({', '.join(fk_columns)}) REFERENCES {ref_table_name} ({', '.join(ref_columns)}),\n"
+            f"{fk_statement}FOREIGN KEY ({', '.join(fk_columns)}) REFERENCES {ref_table_name} ({', '.join(ref_column_names)}),\n"
         )
 
     @override

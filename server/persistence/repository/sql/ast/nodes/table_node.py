@@ -4,12 +4,12 @@ from typing import override
 
 from ..visitable import Visitable
 from ..visitor import Visitor
-from .column_node import ColumnNode
-from .unique_constraint_node import UniqueCheckConstraintNode
-from .foreign_key_node import ForeignKeyNode
-from .primary_key_node import PrimaryKeyNode
 from .check_constraint_node import CheckConstraintNode
+from .column_node import ColumnNode
+from .foreign_key_node import ForeignKeyNode
 from .index_node import IndexNode
+from .primary_key_node import PrimaryKeyNode
+from .unique_constraint_node import UniqueCheckConstraintNode
 
 
 @dataclass

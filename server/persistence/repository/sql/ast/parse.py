@@ -1,14 +1,20 @@
 
 import dataclasses
 import re
+
 from typing import get_type_hints
 
 from models.base.entity import IdEntity
-from .data_types import DataType
-from .nodes.index_node import IndexNode
-from .nodes.table_node import CheckConstraintNode, ColumnNode, ForeignKeyNode, PrimaryKeyNode, TableNode, UniqueCheckConstraintNode
-from .exceptions import FieldParsingException, TableParsingException
 
+from .data_types import DataType
+from .exceptions import FieldParsingException, TableParsingException
+from .nodes.check_constraint_node import CheckConstraintNode
+from .nodes.column_node import ColumnNode
+from .nodes.foreign_key_node import ForeignKeyNode
+from .nodes.index_node import IndexNode
+from .nodes.primary_key_node import PrimaryKeyNode
+from .nodes.table_node import TableNode
+from .nodes.unique_constraint_node import UniqueCheckConstraintNode
 
 _foreign_key_pattern = re.compile(
     r"(?P<table>[A-Za-z_][A-Za-z0-9_]*)\.(?P<field>[A-Za-z_][A-Za-z0-9_]*)"
@@ -19,7 +25,7 @@ def parse_entities_to_tables(entities: list[type[IdEntity]]) -> list[TableNode]:
     partially_resolved_tables_with_metadata = list(map(_parse_entity_to_partial_table, entities))
     partially_resolved_tables = [table for table, _ in partially_resolved_tables_with_metadata]
     tables_by_name: dict[str, TableNode] = {table.name: table for table in partially_resolved_tables}
-    table_to_column_metadata: dict[TableNode, dict[ColumnNode, dict]] = {
+    table_to_column_metadata: dict[TableNode, dict[ColumnNode, dict[str, object]]] = {
         table: column_metadata for (table, column_metadata) in partially_resolved_tables_with_metadata
     }
 
@@ -38,14 +44,14 @@ def parse_entities_to_tables(entities: list[type[IdEntity]]) -> list[TableNode]:
     return fully_resolved_tables
 
 
-def _parse_entity_to_partial_table(entity_type: type[IdEntity]) -> tuple[TableNode, dict[ColumnNode, dict]]:
+def _parse_entity_to_partial_table(entity_type: type[IdEntity]) -> tuple[TableNode, dict[ColumnNode, dict[str, object]]]:
     """
     First pass where we establish the table name and fields, but we haven't considered relationships yet.
     """
     table_name = entity_type.table_name()
 
     columns = []
-    metadata_by_column = {}
+    metadata_by_column: dict[ColumnNode, dict[str, object]] = {}
     # Loop over the fields of the entity
     hints = get_type_hints(entity_type)
     for dataclass_field in entity_type.iterate_field_metadata():
@@ -55,7 +61,7 @@ def _parse_entity_to_partial_table(entity_type: type[IdEntity]) -> tuple[TableNo
 
     return (TableNode(table_name, columns), metadata_by_column)
 
-def _parse_field_to_column(dataclass_field: dataclasses.Field, hints) -> tuple[ColumnNode, dict]:
+def _parse_field_to_column(dataclass_field: dataclasses.Field[str], hints: dict[str, type]) -> tuple[ColumnNode, dict[str, object]]:
     column_name = dataclass_field.name
     field_type = hints[column_name]
     field_metadata = dataclass_field.metadata
@@ -68,7 +74,7 @@ def _parse_field_to_column(dataclass_field: dataclasses.Field, hints) -> tuple[C
         nullable = True
     return (ColumnNode(column_name, column_type, nullable), dict(**field_metadata))
 
-def _parse_field_constraints(table: TableNode, column_metadata: dict[ColumnNode, dict], tables_by_name: dict[str, TableNode]) -> tuple[
+def _parse_field_constraints(table: TableNode, column_metadata: dict[ColumnNode, dict[str, object]], tables_by_name: dict[str, TableNode]) -> tuple[
     list[ForeignKeyNode] | None, 
     PrimaryKeyNode | None, 
     list[UniqueCheckConstraintNode] | None, 

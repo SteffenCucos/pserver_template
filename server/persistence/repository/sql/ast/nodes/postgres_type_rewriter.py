@@ -1,12 +1,9 @@
 
-from datetime import datetime
 from typing import override
 
-from models.base.entity import Id
-
-from .table_rewriter import TableRewriter
-from .column_node import ColumnNode
 from ..data_types import DataType
+from .column_node import ColumnNode
+from .table_rewriter import TableRewriter
 
 
 class PostgresTypeRewriter(TableRewriter):
