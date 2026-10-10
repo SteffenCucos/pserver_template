@@ -21,7 +21,7 @@ mongo = ["pymongo>=4.13", "pymongo_inmemory"]
 postgres = ["psycopg[binary]"]
 sqlite = ["aiosqlite"]
 db = ["pymongo>=4.13", "pymongo_inmemory", "psycopg[binary]", "aiosqlite"]
-test = ["pytest", "pytest-xdist", "httpx", "argon2-cffi", "pymongo>=4.13", "pymongo_inmemory", "aiosqlite"]
+test = ["pytest", "pytest-xdist", "httpx", "argon2-cffi", "pymongo>=4.13", "pymongo_inmemory", "psycopg[binary]", "aiosqlite"]
 quality = ["mypy", "ruff"]
 
 [project.scripts]
