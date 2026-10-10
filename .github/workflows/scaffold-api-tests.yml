@@ -7,23 +7,56 @@ on:
       - main
 
 jobs:
-  quality:
-    name: Type and lint checks
+  setup:
+    name: Install dependencies
     runs-on: ubuntu-latest
+    outputs:
+      python-version: ${{ steps.python.outputs.python-version }}
+      cache-key: ${{ steps.key.outputs.key }}
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
       - name: Set up Python
+        id: python
         uses: actions/setup-python@v5
         with:
           python-version: "3.14"
 
-      - name: Install quality dependencies
+      - name: Compute virtualenv cache key
+        id: key
+        run: echo "key=venv-${{ runner.os }}-py${{ steps.python.outputs.python-version }}-${{ hashFiles('pyproject.toml', 'requirements.txt') }}" >> "$GITHUB_OUTPUT"
+
+      # Saved at the end of this job, before the jobs that need it start
+      - name: Restore virtualenv
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ~/venv
+          key: ${{ steps.key.outputs.key }}
+
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e ".[quality]"
+          python -m venv ~/venv
+          ~/venv/bin/python -m pip install --upgrade pip
+          ~/venv/bin/python -m pip install -e ".[test,quality]" -r requirements.txt
+
+  quality:
+    name: Type and lint checks
+    needs: setup
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Restore dependencies
+        uses: ./.github/actions/restore-venv
+        with:
+          python-version: ${{ needs.setup.outputs.python-version }}
+          cache-key: ${{ needs.setup.outputs.cache-key }}
 
       - name: Run mypy
         run: python -m mypy
@@ -36,27 +69,25 @@ jobs:
 
   unit-tests:
     name: Unit tests
+    needs: setup
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Restore dependencies
+        uses: ./.github/actions/restore-venv
         with:
-          python-version: "3.14"
-
-      - name: Install project and test dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e ".[test]"
+          python-version: ${{ needs.setup.outputs.python-version }}
+          cache-key: ${{ needs.setup.outputs.cache-key }}
 
       - name: Run unit tests
         run: python -m pytest tests -q
 
   api-tests:
     name: API tests (${{ matrix.backend }})
+    needs: setup
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -78,15 +109,26 @@ jobs:
       PYMONGOIM__MONGO_VERSION: "8.0"
       PYMONGOIM__OPERATING_SYSTEM: ubuntu
       PYMONGOIM__OS_VERSION: "24"
+      # Keep the mongod archive out of the shared virtualenv so only this job carries it
+      PYMONGOIM__DOWNLOAD_FOLDER: ${{ github.workspace }}/.pymongoim
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Restore dependencies
+        uses: ./.github/actions/restore-venv
         with:
-          python-version: "3.14"
+          python-version: ${{ needs.setup.outputs.python-version }}
+          cache-key: ${{ needs.setup.outputs.cache-key }}
+
+      # Keyed on the virtualenv too, since a new pymongo_inmemory can resolve a different archive
+      - name: Cache mongod download
+        if: matrix.backend == 'mongo'
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PYMONGOIM__DOWNLOAD_FOLDER }}
+          key: mongod-${{ env.PYMONGOIM__OPERATING_SYSTEM }}${{ env.PYMONGOIM__OS_VERSION }}-${{ env.PYMONGOIM__MONGO_VERSION }}-${{ needs.setup.outputs.cache-key }}
 
       - name: Start Postgres
         if: matrix.backend == 'postgres'
@@ -109,11 +151,6 @@ jobs:
 
           docker logs scaffold-postgres
           exit 1
-
-      - name: Install template CLI and test dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e ".[test]"
 
       - name: Generate scaffold app with CLI
         run: |
@@ -138,10 +175,10 @@ jobs:
           path: test-scafold/artifacts/generated-scaffold-app-${{ matrix.backend }}
           if-no-files-found: error
 
-      - name: Install scaffold dependencies
-        run: |
-          python -m pip install -r test-scafold/app/requirements.txt
-          python -m pip install pytest httpx "pymongo>=4.13" pymongo_inmemory "psycopg[binary]" aiosqlite
+      # --no-index fails instead of downloading if the generated app needs anything the shared
+      # virtualenv doesn't have
+      - name: Check scaffold dependencies are installed
+        run: python -m pip install --no-index -r test-scafold/app/requirements.txt
 
       - name: Run scaffold API tests
         run: python -m pytest test-scafold/tests -q
