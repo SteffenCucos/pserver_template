@@ -10,7 +10,7 @@ pytest test-scafold/tests
 
 Every test runs once per backend: `[mongo]`, `[sqlite]` and `[postgres]`.
 
-- Mongo uses an in-memory `mongod` (`APP_DB_URI=memory://`), downloaded on first run.
+- Mongo uses one in-memory `mongod` shared by the whole session, downloaded on first run. `APP_DB_URI=memory://` also selects it.
 - SQLite uses `sqlite:///:memory:`.
 - Postgres runs in a throwaway `postgres:16` Docker container started for the session on a random port, so Docker must be running. The container is removed when the session ends.
 

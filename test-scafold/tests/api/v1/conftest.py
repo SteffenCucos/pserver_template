@@ -92,18 +92,36 @@ def postgres_uri() -> Iterator[str]:
         subprocess.run(["docker", "rm", "--force", container], capture_output=True)
 
 
+@pytest.fixture(scope="session")
+def mongo_uri() -> Iterator[str]:
+    """
+    Run one in-memory mongod for the session. The app starts its own for memory:// URIs, but it
+    caches that server in a module the client fixture reloads for every test, so each test would
+    start another mongod and they'd pile up until one fails to bind its port.
+    """
+    from pymongo_inmemory import MongoClient
+
+    server = MongoClient()
+    try:
+        address = server.address
+        assert address is not None, "in-memory mongod did not report an address"
+        host, port = address
+        yield f"mongodb://{host}:{port}"
+    finally:
+        server.close()
+
+
 @pytest.fixture(params=BACKENDS)
 def client(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
     assert APP_ROOT.exists(), f"application root does not exist: {APP_ROOT}"
     assert SERVER_ROOT.exists(), f"server package does not exist: {SERVER_ROOT}"
 
     backend: str = request.param
-    if CONFIGURED_URI:
-        uri = CONFIGURED_URI
-    elif backend == "postgres":
+    uri = CONFIGURED_URI or IN_MEMORY_URIS.get(backend)
+    if uri == IN_MEMORY_URIS["mongo"]:
+        uri = request.getfixturevalue("mongo_uri")
+    elif uri is None:
         uri = request.getfixturevalue("postgres_uri")
-    else:
-        uri = IN_MEMORY_URIS[backend]
 
     monkeypatch.setenv("APP_DB_NAME", f"api_tests_{uuid4().hex}")
     monkeypatch.setenv("APP_DB_BACKEND", backend)
