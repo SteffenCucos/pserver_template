@@ -118,7 +118,10 @@ class MongoRepository(Repository[EntityT]):
         uri = self._uri
         if uri in MEMORY_MONGO_URIS:
             server = await asyncio.to_thread(_get_memory_mongo_server, uri)
-            host, port = server.address or "", ""
+            address = server.address
+            if address is None:
+                raise RuntimeError("in-memory mongod did not report an address")
+            host, port = address
             uri = f"mongodb://{host}:{port}"
 
         self._client = AsyncMongoClient(uri)
