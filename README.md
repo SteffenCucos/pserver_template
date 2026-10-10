@@ -305,10 +305,10 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-If `python` is not available on your PATH, install Python 3.8+ from https://www.python.org/ or use the Windows `py` launcher if present:
+If `python` is not available on your PATH, install Python 3.14+ from https://www.python.org/ or use the Windows `py` launcher if present:
 
 ```powershell
-py -3 -m venv .venv
+py -3.14 -m venv .venv
 . .venv\Scripts\Activate.ps1
 .venv\Scripts\pip.exe install -r requirements.txt
 ```
