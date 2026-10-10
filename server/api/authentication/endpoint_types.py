@@ -1,7 +1,9 @@
+
 """Shared typing primitives for auth-aware endpoint decorators and routes."""
 
 from collections.abc import Callable
 from typing import Any, Protocol, TypeVar
+
 
 EndpointT = TypeVar("EndpointT", bound=Callable[..., Any])
 

@@ -1,6 +1,8 @@
+
 import json
 
 from dataclasses import dataclass
+from typing import cast
 
 from pserialize import deserialize
 
@@ -30,7 +32,7 @@ def __fromFile(configPath: str) -> Config:
         return configJson
 
 
-__config: Config = None
+__config: Config | None = None
 
 
 def __get_config() -> Config:
@@ -46,7 +48,8 @@ def __get_config() -> Config:
         if not configJson:
             raise Exception("Could not find config.json file")
         try:
-            __config = deserialize(configJson, Config)
+            config = deserialize(configJson, Config)
+            __config = cast(Config, config)
         except Exception as e:
             raise Exception("Config is invalid", e)
 

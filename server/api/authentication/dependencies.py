@@ -1,8 +1,8 @@
+
 """FastAPI dependencies that enforce route authentication and permissions."""
 
 import logging
 
-from collections.abc import AsyncIterator
 from typing import Annotated
 
 from fastapi import Depends, Request
@@ -19,6 +19,7 @@ from users.user_service import UserService
 
 from .route_permissions import PermissionRequirement
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,28 +27,25 @@ async def get_request_context(
     request: Request,
     session_service: Annotated[SessionService, Depends(get_session_service)],
     user_service: Annotated[UserService, Depends(get_user_service)],
-) -> AsyncIterator[RequestContext]:
+) -> RequestContext:
     """Build and clean up the caller context inside FastAPI's DI lifecycle."""
-    request_context = RequestContext.set_context()
+    request_context = RequestContext()
     request_context.filled = True
 
     session_id_str = request.cookies.get("session_id")        
     session_id = Id(session_id_str) if session_id_str else None
     request_context.session_id = session_id
 
-    try:
-        if session_id and (session := await session_service.get_session(session_id)):
-            request_context.session = session
-            request_context.current_user_id = session.user_id
-            request_context.session_expired = session.is_expired()
+    if session_id and (session := await session_service.get_session(session_id)):
+        request_context.session = session
+        request_context.current_user_id = session.user_id
+        request_context.session_expired = session.is_expired()
 
-            if user := await user_service.get_user(session.user_id):
-                request_context.current_user = user
+        if user := await user_service.get_user(session.user_id):
+            request_context.current_user = user
 
-        request.state.request_context = request_context
-        yield request_context
-    finally:
-        RequestContext.remove_context()
+    request.state.request_context = request_context
+    return request_context
 
 
 def require_current_user(
@@ -88,12 +86,12 @@ class RequirePermission:
             self.requirement.permission,
             request,
         )
-        if await authorization_service.user_has_access(user._id, permission):
+        if await authorization_service.user_has_access(user.id, permission):
             return
 
         logger.info(
             "Authorization failed for user %s: %s",
-            user._id,
+            user.id,
             permission,
         )
         raise ForbiddenException("You don't have access to this resource")

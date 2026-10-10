@@ -4,16 +4,17 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastapi import Depends
+from persistence.dependencies import repository_dependency
+from persistence.pserialize_entity_serializer import PSerializeEntitySerializer
+from persistence.repository.repository import Repository
 
 from auth.password.dependencies import get_password_service
 from auth.password.password_service import PasswordService
-from db.dependencies import repository_dependency
-from db.pserialize_entity_serializer import PSerializeEntitySerializer
-from db.repository.repository import Repository
 
 from .user import User
 from .user_dao import UserDAO
 from .user_service import UserService
+
 
 get_user_repository = repository_dependency(
     resource_name="users",

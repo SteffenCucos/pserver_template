@@ -1,3 +1,4 @@
+
 import logging
 
 from dataclasses import dataclass
@@ -14,11 +15,13 @@ from api.v1 import base_route
 from auth.authorization_service import AuthorizationService
 from auth.dependencies import get_authorization_service, get_session_service
 from auth.session.session_service import SessionService
+from models.base.id import Id
 from users.dependencies import get_user_service
 from users.user import User
 from users.user_service import CreateUserRequest, UpdateUserRequest, UserService
 
-logger = logging.getLogger()
+
+logger = logging.getLogger(__name__)
 
 router = Router(
     prefix=base_route + "/users",
@@ -27,9 +30,9 @@ router = Router(
 
 @dataclass
 class UserResponse:
-    _id: str
-    _created_date: datetime
-    _updated_date: datetime
+    id: str
+    created_date: datetime
+    updated_date: datetime
     user_name: str
     email: str
     email_verified: bool
@@ -37,9 +40,9 @@ class UserResponse:
 
 def _to_user_response(user: User) -> UserResponse:
     return UserResponse(
-        _id=str(user._id),
-        _created_date=user._created_date,
-        _updated_date=user._updated_date,
+        id=str(user.id),
+        created_date=user.created_date,
+        updated_date=user.updated_date,
         user_name=user.user_name,
         email=user.email,
         email_verified=user.email_verified,
@@ -52,7 +55,7 @@ async def create_user(
     user_service: Annotated[UserService, Depends(get_user_service)],
 ) -> str:
     user = await user_service.create_user(user_request)
-    return str(user._id)
+    return str(user.id)
 
 
 @router.get("")
@@ -67,10 +70,10 @@ async def get_all_users(
     all_users = await user_service.get_all_users()
 
     # Filter out all users the calling user doesn't have permission to see
-    filtered = []
+    filtered: list[User] = []
     for user in all_users:
-        permission = f"read/users/{user._id}"
-        if await authorization_service.user_has_access(current_user._id, permission):
+        permission = f"read/users/{user.id}"
+        if await authorization_service.user_has_access(current_user.id, permission):
             filtered.append(user)
 
     return [_to_user_response(user) for user in filtered]
@@ -82,6 +85,7 @@ async def get_user(
     user_id: str,
     user_service: Annotated[UserService, Depends(get_user_service)],
 ) -> UserResponse:
+    user_id = Id(user_id)
     user = await user_service.get_user(user_id)
     if not user:
         raise NotFoundException(f"User with id:{user_id} does not exist")
@@ -96,6 +100,7 @@ async def update_user(
     user_request: UpdateUserRequest,
     user_service: Annotated[UserService, Depends(get_user_service)],
 ) -> UserResponse:
+    user_id = Id(user_id)
     user = await user_service.get_user(user_id)
     if not user:
         raise NotFoundException(f"User with id:{user_id} does not exist")
@@ -111,6 +116,7 @@ async def delete_user(
     user_service: Annotated[UserService, Depends(get_user_service)],
     session_service: Annotated[SessionService, Depends(get_session_service)],
 ) -> UserResponse:
+    user_id = Id(user_id)
     user = await user_service.get_user(user_id)
     if not user:
         raise NotFoundException(f"User with id:{user_id} does not exist")
