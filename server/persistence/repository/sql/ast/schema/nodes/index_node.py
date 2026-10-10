@@ -2,9 +2,9 @@
 from dataclasses import dataclass
 from typing import override
 
-from ..visitable import Visitable
-from ..visitor import Visitor
+from ..schema_visitor import SchemaVisitor
 from .column_node import ColumnNode
+from .visitable import Visitable
 
 
 @dataclass
@@ -13,5 +13,5 @@ class IndexNode(Visitable):
     columns: list[ColumnNode]
 
     @override
-    def accept(self, visitor: Visitor) -> None:
+    def accept(self, visitor: SchemaVisitor) -> None:
         visitor.visit_index(self)

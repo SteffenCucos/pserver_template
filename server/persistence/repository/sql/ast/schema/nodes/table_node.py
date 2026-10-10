@@ -2,14 +2,14 @@
 from dataclasses import dataclass
 from typing import override
 
-from ..visitable import Visitable
-from ..visitor import Visitor
+from ..schema_visitor import SchemaVisitor
 from .check_constraint_node import CheckConstraintNode
 from .column_node import ColumnNode
 from .foreign_key_node import ForeignKeyNode
 from .index_node import IndexNode
 from .primary_key_node import PrimaryKeyNode
 from .unique_constraint_node import UniqueCheckConstraintNode
+from .visitable import Visitable
 
 
 @dataclass
@@ -23,7 +23,7 @@ class TableNode(Visitable):
     indexes: list[IndexNode] | None = None
 
     @override
-    def accept(self, visitor: Visitor) -> None:
+    def accept(self, visitor: SchemaVisitor) -> None:
         visitor.visit_table(self)
         for column in self.columns:
             column.accept(visitor)

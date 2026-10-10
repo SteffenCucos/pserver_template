@@ -1,3 +1,4 @@
+
 from dataclasses import dataclass
 
 from persistence.models import INDEX, NOT_NULLABLE, UNIQUE, field

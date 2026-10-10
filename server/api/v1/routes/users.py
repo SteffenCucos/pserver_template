@@ -1,3 +1,4 @@
+
 import logging
 
 from dataclasses import dataclass
@@ -18,6 +19,7 @@ from models.base.id import Id
 from users.dependencies import get_user_service
 from users.user import User
 from users.user_service import CreateUserRequest, UpdateUserRequest, UserService
+
 
 logger = logging.getLogger(__name__)
 

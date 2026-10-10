@@ -1,3 +1,4 @@
+
 """Async Postgres implementation of the backend-neutral repository contract."""
 
 from __future__ import annotations

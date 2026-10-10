@@ -1,6 +1,4 @@
 
-
-
 import pytest
 
 from typing_extensions import cast

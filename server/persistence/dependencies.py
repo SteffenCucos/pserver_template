@@ -1,3 +1,4 @@
+
 """FastAPI dependency providers for repository injection."""
 
 from __future__ import annotations
@@ -10,6 +11,7 @@ from fastapi import Depends
 from .config import DatabaseSettings
 from .repository import EntitySerializer, Repository
 from .repository.factory import create_repository
+
 
 EntityT = TypeVar("EntityT")
 

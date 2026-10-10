@@ -1,6 +1,4 @@
 
-
-
 class FieldParsingException(Exception):
     pass
 

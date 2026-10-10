@@ -1,14 +1,18 @@
-from server.persistence.repository.sql.ast.data_types import DataType
-from server.persistence.repository.sql.ast.nodes.check_constraint_node import CheckConstraintNode
-from server.persistence.repository.sql.ast.nodes.column_node import ColumnNode
-from server.persistence.repository.sql.ast.nodes.foreign_key_node import ForeignKeyNode
-from server.persistence.repository.sql.ast.nodes.index_node import IndexNode
-from server.persistence.repository.sql.ast.nodes.postgres_visitor import PostgresVisitor
-from server.persistence.repository.sql.ast.nodes.primary_key_node import PrimaryKeyNode
-from server.persistence.repository.sql.ast.nodes.table_node import TableNode
-from server.persistence.repository.sql.ast.nodes.unique_constraint_node import (
+
+from server.persistence.repository.sql.ast.schema.data_types import DataType
+from server.persistence.repository.sql.ast.schema.nodes.check_constraint_node import (
+    CheckConstraintNode,
+)
+from server.persistence.repository.sql.ast.schema.nodes.column_node import ColumnNode
+from server.persistence.repository.sql.ast.schema.nodes.foreign_key_node import ForeignKeyNode
+from server.persistence.repository.sql.ast.schema.nodes.index_node import IndexNode
+from server.persistence.repository.sql.ast.schema.nodes.primary_key_node import PrimaryKeyNode
+from server.persistence.repository.sql.ast.schema.nodes.table_node import TableNode
+from server.persistence.repository.sql.ast.schema.nodes.unique_constraint_node import (
     UniqueCheckConstraintNode,
 )
+from server.persistence.repository.sql.postgres.postgres_visitor import PostgresVisitor
+
 
 # DataType members render as their Postgres type names
 

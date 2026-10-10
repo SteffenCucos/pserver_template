@@ -1,9 +1,11 @@
+
 """Internal metadata attached by the public auth decorators."""
 
 from dataclasses import dataclass
 from typing import Any
 
 from .endpoint_types import EndpointDecorator, EndpointT
+
 
 _AUTH_REQUIRED_ATTRIBUTE = "__server_template_auth_required__"
 _PERMISSION_REQUIREMENT_ATTRIBUTE = "__server_template_permission_requirement__"

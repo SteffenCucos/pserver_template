@@ -1,3 +1,4 @@
+
 from __future__ import annotations
 
 from persistence.daos.entity_dao import EntityDAO

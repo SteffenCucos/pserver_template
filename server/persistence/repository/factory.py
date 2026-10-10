@@ -1,3 +1,4 @@
+
 """Factory for selecting a concrete repository backend."""
 
 from __future__ import annotations
@@ -6,6 +7,7 @@ from typing import TypeVar
 
 from ..config import DatabaseBackend, DatabaseSettings
 from ..repository import EntitySerializer, Repository
+
 
 EntityT = TypeVar("EntityT")
 

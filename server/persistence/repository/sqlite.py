@@ -1,3 +1,4 @@
+
 """Async SQLite implementation of the backend-neutral repository contract."""
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ from urllib.parse import urlparse
 import aiosqlite
 
 from .repository import EntityIdRequiredError, EntitySerializer, EntityT, Repository
+
 
 _MEMORY_SQLITE_URIS = {":memory:", "sqlite:///:memory:"}
 _SHARED_MEMORY_CONNECTIONS: dict[str, aiosqlite.Connection] = {}

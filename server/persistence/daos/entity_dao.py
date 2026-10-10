@@ -1,3 +1,4 @@
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -9,6 +10,7 @@ from persistence.serializing_middleware import get_application_serializer
 
 from models.base.entity import IdEntity
 from models.base.id import Id
+
 
 TEntity = TypeVar("TEntity", bound=IdEntity)
 

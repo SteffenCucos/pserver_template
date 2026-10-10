@@ -1,3 +1,4 @@
+
 from server.api.authentication.route_permissions import (
     get_auth_required,
     get_permission_requirement,

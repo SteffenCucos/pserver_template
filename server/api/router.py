@@ -1,3 +1,4 @@
+
 import logging
 
 from collections.abc import Callable
@@ -11,6 +12,7 @@ from persistence.serializing_middleware import get_application_serializer
 
 from api.authentication.endpoint_types import EndpointT
 from api.authentication.route import AuthzRoute
+
 
 serializer = get_application_serializer()
 

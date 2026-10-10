@@ -1,7 +1,9 @@
+
 import logging
 
 from persistence import DatabaseSettings, MappingSerializer
 from persistence.repository.factory import create_repository
+
 
 logger = logging.getLogger(__name__)
 

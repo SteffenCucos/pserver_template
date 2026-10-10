@@ -1,3 +1,4 @@
+
 """Permission annotation wired into FastAPI dependency injection."""
 
 from api.authentication.endpoint_types import EndpointDecorator

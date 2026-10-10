@@ -1,3 +1,4 @@
+
 """FastAPI dependency providers for auth domain services."""
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ from .rbac.daos import PermissionDAO, RoleDAO, RolePermissionDAO, UserRoleDAO
 from .session.session import Session
 from .session.session_dao import SessionDAO
 from .session.session_service import SessionService
+
 
 get_perm_repository = repository_dependency(
     resource_name="perms",

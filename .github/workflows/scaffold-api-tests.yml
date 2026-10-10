@@ -29,7 +29,10 @@ jobs:
         run: python -m mypy
 
       - name: Run Ruff
-        run: python -m ruff check server server_template tests test-scafold/tests
+        run: python -m ruff check server server_template tests test-scafold/tests scripts
+
+      - name: Check file edge formatting
+        run: python scripts/format_file_edges.py --check server server_template tests test-scafold/tests scripts
 
   unit-tests:
     name: Unit tests

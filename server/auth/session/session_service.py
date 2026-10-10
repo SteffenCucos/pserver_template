@@ -1,3 +1,4 @@
+
 import logging
 
 from auth.session.session import Session
@@ -5,6 +6,7 @@ from models.base.id import Id
 from users.user import User
 
 from .session_dao import SessionDAO
+
 
 logger = logging.getLogger(__name__)
 

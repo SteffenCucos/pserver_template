@@ -58,7 +58,7 @@ line-length = 100
 extend-exclude = ["test-scafold/app"]
 
 [tool.ruff.lint]
-select = ["E4", "E7", "E9", "F", "I"]
+select = ["E4", "E7", "E9", "F", "I", "W292"]
 
 [tool.ruff.lint.isort]
 known-first-party = [
@@ -73,3 +73,4 @@ known-first-party = [
 ]
 section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
 lines-between-types = 1
+lines-after-imports = 2

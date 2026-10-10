@@ -1,3 +1,4 @@
+
 from dataclasses import dataclass
 from datetime import datetime
 from typing import cast, override
@@ -17,15 +18,15 @@ from server.persistence.models import (
     UNIQUE,
     field,
 )
-from server.persistence.repository.sql.ast.data_types import DataType
-from server.persistence.repository.sql.ast.exceptions import (
+from server.persistence.repository.sql.ast.schema.data_types import DataType
+from server.persistence.repository.sql.ast.schema.exceptions import (
     FieldParsingException,
     TableParsingException,
 )
-from server.persistence.repository.sql.ast.nodes.column_node import ColumnNode
-from server.persistence.repository.sql.ast.nodes.foreign_key_node import ForeignKeyNode
-from server.persistence.repository.sql.ast.nodes.table_node import TableNode
-from server.persistence.repository.sql.ast.parse import parse_entities_to_tables
+from server.persistence.repository.sql.ast.schema.nodes.column_node import ColumnNode
+from server.persistence.repository.sql.ast.schema.nodes.foreign_key_node import ForeignKeyNode
+from server.persistence.repository.sql.ast.schema.nodes.table_node import TableNode
+from server.persistence.repository.sql.ast.schema.parse import parse_entities_to_tables
 from server.users.user import User
 
 

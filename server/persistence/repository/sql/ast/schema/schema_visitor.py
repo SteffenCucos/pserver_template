@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
+
 # Nodes import Visitor, so these are only needed for type checking
 if TYPE_CHECKING:
     from .nodes.check_constraint_node import CheckConstraintNode
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
     from .nodes.unique_constraint_node import UniqueCheckConstraintNode
 
 
-class Visitor(ABC):
+class SchemaVisitor(ABC):
     
     @abstractmethod
     def visit_column(self, column: ColumnNode) -> None:

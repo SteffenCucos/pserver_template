@@ -1,3 +1,4 @@
+
 from dataclasses import dataclass
 from datetime import datetime
 from typing import cast
@@ -7,6 +8,7 @@ from server.persistence.serializing_middleware import (
     get_application_deserializer,
     get_application_serializer,
 )
+
 
 serializer = get_application_serializer()
 deserializer  = get_application_deserializer()

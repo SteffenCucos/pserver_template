@@ -15,6 +15,7 @@ from .user import User
 from .user_dao import UserDAO
 from .user_service import UserService
 
+
 get_user_repository = repository_dependency(
     resource_name="users",
     serializer=PSerializeEntitySerializer(User),

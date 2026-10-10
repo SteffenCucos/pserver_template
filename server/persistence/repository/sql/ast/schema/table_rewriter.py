@@ -1,17 +1,17 @@
 
 from typing import override
 
-from ..visitor import Visitor
-from .check_constraint_node import CheckConstraintNode
-from .column_node import ColumnNode
-from .foreign_key_node import ForeignKeyNode
-from .index_node import IndexNode
-from .primary_key_node import PrimaryKeyNode
-from .table_node import TableNode
-from .unique_constraint_node import UniqueCheckConstraintNode
+from .nodes.check_constraint_node import CheckConstraintNode
+from .nodes.column_node import ColumnNode
+from .nodes.foreign_key_node import ForeignKeyNode
+from .nodes.index_node import IndexNode
+from .nodes.primary_key_node import PrimaryKeyNode
+from .nodes.table_node import TableNode
+from .nodes.unique_constraint_node import UniqueCheckConstraintNode
+from .schema_visitor import SchemaVisitor
 
 
-class TableRewriter(Visitor):
+class TableRewriter(SchemaVisitor):
     def __init__(self) -> None:
         super().__init__()
         self._table: TableNode | None = None

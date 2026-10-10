@@ -1,17 +1,17 @@
 
 from typing import override
 
-from ..visitor import Visitor
-from .check_constraint_node import CheckConstraintNode
-from .column_node import ColumnNode
-from .foreign_key_node import ForeignKeyNode
-from .index_node import IndexNode
-from .primary_key_node import PrimaryKeyNode
-from .table_node import TableNode
-from .unique_constraint_node import UniqueCheckConstraintNode
+from ..ast.schema.nodes.check_constraint_node import CheckConstraintNode
+from ..ast.schema.nodes.column_node import ColumnNode
+from ..ast.schema.nodes.foreign_key_node import ForeignKeyNode
+from ..ast.schema.nodes.index_node import IndexNode
+from ..ast.schema.nodes.primary_key_node import PrimaryKeyNode
+from ..ast.schema.nodes.table_node import TableNode
+from ..ast.schema.nodes.unique_constraint_node import UniqueCheckConstraintNode
+from ..ast.schema.schema_visitor import SchemaVisitor
 
 
-class PostgresVisitor(Visitor):
+class PostgresVisitor(SchemaVisitor):
     def __init__(self) -> None:
         self.columns: list[str] = []
         self.constraints: list[str] = []

@@ -1,3 +1,4 @@
+
 from dataclasses import dataclass
 from datetime import datetime
 from typing import cast, override
@@ -8,9 +9,10 @@ from server.auth.rbac.models import Permission, Role, RolePermission, UserRole
 from server.models.base.entity import Entity
 from server.models.base.id import Id
 from server.persistence.models import CHECK, FOREIGN_KEY, UNIQUE, field
-from server.persistence.repository.sql.ast.exceptions import TableParsingException
+from server.persistence.repository.sql.ast.schema.exceptions import TableParsingException
 from server.persistence.repository.sql.schema import generate_schema_ddl_operations
 from server.users.user import User
+
 
 # Region Test Types
 

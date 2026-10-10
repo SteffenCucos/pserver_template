@@ -13,7 +13,6 @@ class DataType(StrEnum):
 
     # Numeric Types
     INTEGER = "INTEGER"
-    BIGINT = "BIGINT"
     DOUBLE_PRECISION = "DOUBLE PRECISION"
 
     # Boolean Type

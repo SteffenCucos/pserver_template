@@ -1,3 +1,4 @@
+
 """Entity serializer backed by the application's pserialize configuration."""
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ from .serializing_middleware import (
     get_application_deserializer,
     get_application_serializer,
 )
+
 
 EntityT = TypeVar("EntityT")
 Record = dict[str, Any]

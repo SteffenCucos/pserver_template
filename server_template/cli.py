@@ -1,3 +1,4 @@
+
 """Command line interface for scaffolding FastAPI apps from this template."""
 
 from __future__ import annotations
@@ -10,6 +11,7 @@ import subprocess
 import sys
 
 from pathlib import Path
+
 
 DEFAULT_TEMPLATE_REPO = "https://github.com/SteffenCucos/Server_Template.git"
 DEFAULT_TEMPLATE_BRANCH = "main"

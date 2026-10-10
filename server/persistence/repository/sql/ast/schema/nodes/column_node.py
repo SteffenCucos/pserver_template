@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from typing import override
 
 from ..data_types import DataType
-from ..visitable import Visitable
-from ..visitor import Visitor
+from ..schema_visitor import SchemaVisitor
+from .visitable import Visitable
 
 
 @dataclass
@@ -14,7 +14,7 @@ class ColumnNode(Visitable):
     nullable: bool
 
     @override
-    def accept(self, visitor: Visitor) -> None:
+    def accept(self, visitor: SchemaVisitor) -> None:
         visitor.visit_column(self)
 
     @override

@@ -1,3 +1,4 @@
+
 from auth.rbac.authorization_tree_service import AuthorizationTreeService
 from auth.rbac.daos import RolePermissionDAO
 from auth.rbac.daos.user_role_dao import UserRoleDAO
@@ -39,4 +40,3 @@ class AuthorizationService:
         # Invalidate the cache for the user's roles in the authorization tree service
         self.authorization_tree_service.add_user_role(user_id, role_id)
         return user_role
-    

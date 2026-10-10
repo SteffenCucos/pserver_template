@@ -1,9 +1,9 @@
 
 from models.base.entity import IdEntity
 
-from .ast.nodes.postgres_type_rewriter import PostgresTypeRewriter
-from .ast.nodes.postgres_visitor import PostgresVisitor
-from .ast.parse import parse_entities_to_tables
+from .ast.schema.parse import parse_entities_to_tables
+from .postgres.postgres_type_rewriter import PostgresTypeRewriter
+from .postgres.postgres_visitor import PostgresVisitor
 
 
 def generate_schema_ddl_operations(entity_types: list[type[IdEntity]]) -> list[str]:

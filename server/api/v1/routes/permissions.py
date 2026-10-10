@@ -1,3 +1,4 @@
+
 import logging
 
 from dataclasses import dataclass
@@ -9,6 +10,7 @@ from api.router import Router
 from api.v1 import base_route
 from auth.authorization_service import AuthorizationService
 from auth.dependencies import get_authorization_service
+
 
 logger = logging.getLogger(__name__)
 

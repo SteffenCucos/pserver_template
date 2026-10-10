@@ -1,6 +1,4 @@
 
-
-
 from auth.rbac.daos.permission_dao import PermissionDAO
 from auth.rbac.models import Permission
 from models.base.id import Id
@@ -30,4 +28,3 @@ class PermissionService:
 
     async def delete_permission(self, id: Id) -> bool:
         return await self.permission_dao.delete(id)
-        

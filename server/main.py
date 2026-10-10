@@ -1,3 +1,4 @@
+
 import logging
 import logging.config
 
@@ -7,6 +8,7 @@ from fastapi import FastAPI
 
 from api.v1.api import api_router
 from config import config
+
 
 log_config = {
     "version": 1,

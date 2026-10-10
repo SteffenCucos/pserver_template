@@ -1,3 +1,4 @@
+
 import logging
 
 from dataclasses import dataclass
@@ -7,6 +8,7 @@ from auth.password.password_service import PasswordService
 from models.base.id import Id
 from users.user import User
 from users.user_dao import UserDAO
+
 
 logger = logging.getLogger(__name__)
 

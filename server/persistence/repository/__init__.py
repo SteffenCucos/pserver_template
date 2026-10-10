@@ -1,3 +1,4 @@
+
 """Repository package exports."""
 
 from .repository import (
@@ -9,6 +10,7 @@ from .repository import (
     Repository,
     RepositoryError,
 )
+
 
 __all__ = [
     "EntityIdRequiredError",

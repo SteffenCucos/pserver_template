@@ -16,6 +16,7 @@ from .nodes.primary_key_node import PrimaryKeyNode
 from .nodes.table_node import TableNode
 from .nodes.unique_constraint_node import UniqueCheckConstraintNode
 
+
 _foreign_key_pattern = re.compile(
     r"(?P<table>[A-Za-z_][A-Za-z0-9_]*)\.(?P<field>[A-Za-z_][A-Za-z0-9_]*)"
 )
@@ -123,4 +124,3 @@ def _parse_field_constraints(table: TableNode, column_metadata: dict[ColumnNode,
            unique_constraints or None, \
            check_constraints or None, \
            indexes or None
-     

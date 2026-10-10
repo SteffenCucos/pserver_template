@@ -1,3 +1,4 @@
+
 """Async Mongo implementation of the backend-neutral repository contract."""
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ from pymongo.asynchronous.collection import AsyncCollection
 from pymongo_inmemory import MongoClient
 
 from .repository import EntityIdRequiredError, EntitySerializer, EntityT, Repository
+
 
 MEMORY_MONGO_URIS = {
     "memory://",

@@ -1,3 +1,4 @@
+
 """FastAPI dependencies that enforce route authentication and permissions."""
 
 import logging
@@ -17,6 +18,7 @@ from users.user import User
 from users.user_service import UserService
 
 from .route_permissions import PermissionRequirement
+
 
 logger = logging.getLogger(__name__)
 

@@ -1,8 +1,10 @@
+
 from auth.rbac.daos import RolePermissionDAO, UserRoleDAO
 from auth.rbac.permission_service import PermissionService
 from auth.rbac.permission_tree import PermissionTree
 from auth.rbac.tree_store import TreeStore
 from models.base.id import Id
+
 
 _STORE = TreeStore()
 _TREE_CLASS = PermissionTree

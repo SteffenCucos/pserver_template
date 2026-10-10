@@ -1,3 +1,4 @@
+
 """Backend-neutral repository contracts.
 
 The Repository is the application interface to the underlying database. It
@@ -10,6 +11,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from typing import Any, Generic, TypeVar
+
 
 EntityT = TypeVar("EntityT")
 Record = dict[str, Any]

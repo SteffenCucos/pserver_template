@@ -1,9 +1,9 @@
 
 from typing import override
 
-from ..data_types import DataType
-from .column_node import ColumnNode
-from .table_rewriter import TableRewriter
+from ..ast.schema.data_types import DataType
+from ..ast.schema.nodes.column_node import ColumnNode
+from ..ast.schema.table_rewriter import TableRewriter
 
 
 class PostgresTypeRewriter(TableRewriter):

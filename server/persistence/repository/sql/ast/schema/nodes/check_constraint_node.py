@@ -2,8 +2,8 @@
 from dataclasses import dataclass
 from typing import override
 
-from ..visitable import Visitable
-from ..visitor import Visitor
+from ..schema_visitor import SchemaVisitor
+from .visitable import Visitable
 
 
 @dataclass
@@ -12,5 +12,5 @@ class CheckConstraintNode(Visitable):
     constraint: str
 
     @override
-    def accept(self, visitor: Visitor) -> None:
+    def accept(self, visitor: SchemaVisitor) -> None:
         visitor.visit_check_constraint(self)

@@ -1,8 +1,4 @@
 
-
-
-
-
 from auth.rbac.daos.role_dao import RoleDAO
 from auth.rbac.models import Role
 from models.base.id import Id
@@ -35,4 +31,3 @@ class RoleService:
 
     async def enumerate_rolls(self) -> list[Role]:
         return await self.role_dao.enumerate()
-    
