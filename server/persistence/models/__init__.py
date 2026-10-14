@@ -28,11 +28,7 @@ def COLLATION(value: str) -> FieldMetadata:
 
 # Indexes and constraints
 UNIQUE = FieldMetadata(unique=True)
-def INDEX(name: str | None = None) -> FieldMetadata:
-    return FieldMetadata(index=name or True)
-def COMPOUND_INDEX(name: str) -> FieldMetadata:
-    return FieldMetadata(compound_index=name)
-TEXT_INDEX = FieldMetadata(text_index=True)
+INDEX = FieldMetadata(index=True)
 SPARSE = FieldMetadata(sparse=True)
 def CHECK(expression: str) -> FieldMetadata:
     return FieldMetadata(check=expression)

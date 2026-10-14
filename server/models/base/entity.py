@@ -2,9 +2,16 @@
 from dataclasses import Field as DataclassField
 from dataclasses import dataclass, fields
 from datetime import datetime as Datetime
-from typing import Any, Iterable
+from typing import Any, ClassVar, Iterable
 
 from persistence.models import PRIMARY_KEY, field
+from persistence.repository.sql.schema.types import (
+    CheckConstraint,
+    ForeignKey,
+    Index,
+    PrimaryKey,
+    UniqueConstraint,
+)
 from typing_extensions import dataclass_transform
 
 from .id import Id, create_id
@@ -17,18 +24,19 @@ class IdEntity:
     created_date: Datetime = field(init=False)
     updated_date: Datetime = field(init=False)
 
+    table_name: ClassVar[str]
+    primary_key: ClassVar[PrimaryKey]
+    unique_constraints: ClassVar[list[UniqueConstraint]]
+    indexes: ClassVar[list[Index]]
+    check_constraints: ClassVar[list[CheckConstraint]]
+    foreign_keys: ClassVar[list[ForeignKey]]
+
+
     def set_created_date(self) -> None:
         self.created_date = Datetime.now()
 
     def set_updated_date(self) -> None:
         self.updated_date = Datetime.now()
-
-    @staticmethod
-    def table_name() -> str:
-        """
-        All IdEntity classes must implement this method
-        """
-        raise NotImplementedError()
 
     @classmethod
     def iterate_field_metadata(cls: type['IdEntity']) -> Iterable[DataclassField[Any]]:

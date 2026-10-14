@@ -1,7 +1,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import cast, override
+from typing import ClassVar, cast
 
 import pytest
 
@@ -10,7 +10,7 @@ from server.models.base.entity import Entity
 from server.models.base.id import Id
 from server.persistence.models import CHECK, FOREIGN_KEY, UNIQUE, field
 from server.persistence.repository.sql.ast.schema.exceptions import TableParsingException
-from server.persistence.repository.sql.schema import generate_schema_ddl_operations
+from server.persistence.repository.sql.ddl import generate_schema_ddl_operations
 from server.users.user import User
 
 
@@ -26,40 +26,28 @@ class TestTypesEntity(Entity()):
     list_f: list
     bool_f: bool
 
-    @override
-    @staticmethod
-    def table_name() -> str:
-        return "test_types_entities"
+    table_name: ClassVar[str] = "test_types_entities"
 
 
 @dataclass
 class TestFKEntity(Entity()):
     fk_field: Id = field(FOREIGN_KEY("test_types_entities.id"))
 
-    @override
-    @staticmethod
-    def table_name() -> str:
-        return "test_fk_entities"
+    table_name: ClassVar[str] = "test_fk_entities"
 
 
 @dataclass
 class TestUniqueEntity(Entity()):
     unique_field: str = field(UNIQUE)
 
-    @override
-    @staticmethod
-    def table_name() -> str:
-        return "test_unique_entities"
+    table_name: ClassVar[str] = "test_unique_entities"
 
 
 @dataclass
 class TestCheckConstraintEntity(Entity()):
     check_field: int = field(CHECK("check_field > 0"))
 
-    @override
-    @staticmethod
-    def table_name() -> str:
-        return "test_check_constraint_entities"
+    table_name: ClassVar[str] = "test_check_constraint_entities"
 
 
 CREATE_TEST_TYPES_ENTITIES = (
@@ -171,7 +159,8 @@ def test_generate_schema_ddl_operations_creates_role_permission_schema() -> None
         "updated_date TIMESTAMP NOT NULL,\n"
         "role_id TEXT NOT NULL,\n"
         "permission_id TEXT NOT NULL\n"
-        ");",
+        ");"
+        "CREATE INDEX idx_role_permissions_role_id ON role_permissions (role_id);",
 
         "CREATE TABLE users (\n"
         "id TEXT NOT NULL,\n"
@@ -193,12 +182,14 @@ def test_generate_schema_ddl_operations_creates_role_permission_schema() -> None
         "updated_date TIMESTAMP NOT NULL,\n"
         "user_id TEXT NOT NULL,\n"
         "role_id TEXT NOT NULL\n"
-        ");",
+        ");"
+        "CREATE INDEX idx_user_roles_user_id ON user_roles (user_id);",
 
         "\n",
 
         "ALTER TABLE permissions \n"
-        "ADD CONSTRAINT pk_permissions_id PRIMARY KEY (id)\n",
+        "ADD CONSTRAINT pk_permissions_id PRIMARY KEY (id),\n"
+        "ADD CONSTRAINT uq_permission_key UNIQUE (key)\n",
 
         "ALTER TABLE roles \n"
         "ADD CONSTRAINT pk_roles_id PRIMARY KEY (id),\n"
@@ -206,16 +197,20 @@ def test_generate_schema_ddl_operations_creates_role_permission_schema() -> None
 
         "ALTER TABLE role_permissions \n"
         "ADD CONSTRAINT pk_role_permissions_id PRIMARY KEY (id),\n"
+        "ADD CONSTRAINT uq_role_permission_role_id_permission_id "
+        "UNIQUE (role_id, permission_id),\n"
         "ADD CONSTRAINT fk_role_permissions_role_id FOREIGN KEY (role_id) REFERENCES roles (id),\n"
         "ADD CONSTRAINT fk_role_permissions_permission_id FOREIGN KEY (permission_id) "
         "REFERENCES permissions (id)\n",
 
         "ALTER TABLE users \n"
         "ADD CONSTRAINT pk_users_id PRIMARY KEY (id),\n"
+        "ADD CONSTRAINT uq_users_user_name UNIQUE (user_name),\n"
         "ADD CONSTRAINT uq_users_email UNIQUE (email)\n",
 
         "ALTER TABLE user_roles \n"
         "ADD CONSTRAINT pk_user_roles_id PRIMARY KEY (id),\n"
+        "ADD CONSTRAINT uq_user_role_user_id_role_id UNIQUE (user_id, role_id),\n"
         "ADD CONSTRAINT fk_user_roles_user_id FOREIGN KEY (user_id) REFERENCES users (id),\n"
         "ADD CONSTRAINT fk_user_roles_role_id FOREIGN KEY (role_id) REFERENCES roles (id)\n",
     ]
@@ -226,9 +221,7 @@ def test_generate_schema_ddl_operations_rejects_non_string_foreign_keys() -> Non
     class InvalidForeignKeyEntity(Entity()):
         target_id: Id = field(FOREIGN_KEY(cast(str, 1)))
 
-        @staticmethod
-        def table_name() -> str:
-            return "invalid_foreign_key_entities"
+        table_name: ClassVar[str] = "invalid_foreign_key_entities"
 
     with pytest.raises(TableParsingException, match="Foreign key must be a string"):
         generate_schema_ddl_operations([TestTypesEntity, InvalidForeignKeyEntity])
@@ -239,9 +232,7 @@ def test_generate_schema_ddl_operations_rejects_malformed_foreign_keys() -> None
     class InvalidForeignKeyEntity(Entity()):
         target_id: Id = field(FOREIGN_KEY("test_types_entities-id"))
 
-        @staticmethod
-        def table_name() -> str:
-            return "invalid_foreign_key_entities"
+        table_name: ClassVar[str] = "invalid_foreign_key_entities"
 
     with pytest.raises(TableParsingException, match="Foreign key must be a string"):
         generate_schema_ddl_operations([TestTypesEntity, InvalidForeignKeyEntity])
@@ -252,9 +243,7 @@ def test_generate_schema_ddl_operations_rejects_foreign_keys_to_unknown_tables()
     class InvalidForeignKeyEntity(Entity()):
         target_id: Id = field(FOREIGN_KEY("unknown_table.id"))
 
-        @staticmethod
-        def table_name() -> str:
-            return "invalid_foreign_key_entities"
+        table_name: ClassVar[str] = "invalid_foreign_key_entities"
 
     with pytest.raises(TableParsingException, match="Foreign key table 'unknown_table' not found"):
         generate_schema_ddl_operations([TestTypesEntity, InvalidForeignKeyEntity])
@@ -265,9 +254,7 @@ def test_generate_schema_ddl_operations_rejects_foreign_keys_to_unknown_fields()
     class InvalidForeignKeyEntity(Entity()):
         target_id: Id = field(FOREIGN_KEY("test_types_entities.unknown_id"))
 
-        @staticmethod
-        def table_name() -> str:
-            return "invalid_foreign_key_entities"
+        table_name: ClassVar[str] = "invalid_foreign_key_entities"
 
     with pytest.raises(TableParsingException, match="Foreign key field 'unknown_id' not found"):
         generate_schema_ddl_operations([TestTypesEntity, InvalidForeignKeyEntity])
