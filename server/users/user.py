@@ -17,4 +17,3 @@ class User(Entity()):  # type: ignore[misc]
     email_verified: bool = False
 
     table_name: ClassVar[str] = "users"
-    
