@@ -1,3 +1,4 @@
+
 """Reusable FastAPI server template package.
 
 This package is intended to hold shared application scaffolding for FastAPI

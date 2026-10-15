@@ -1,0 +1,30 @@
+name: Restore dependencies
+description: Set up Python and restore the virtualenv built by the setup job.
+
+inputs:
+  python-version:
+    description: Exact Python version the virtualenv was built with.
+    required: true
+  cache-key:
+    description: Cache key of the virtualenv.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    # The virtualenv links to this interpreter, so it must be the same patch version
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Restore virtualenv
+      uses: actions/cache/restore@v4
+      with:
+        path: ~/venv
+        key: ${{ inputs.cache-key }}
+        fail-on-cache-miss: true
+
+    - name: Use virtualenv
+      shell: bash
+      run: echo "$HOME/venv/bin" >> "$GITHUB_PATH"

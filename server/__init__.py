@@ -1,3 +1,4 @@
+
 """FastAPI server template package.
 
 Contains the application entry point, configuration loading, API routing,

@@ -1,3 +1,4 @@
+
 """Auth-aware FastAPI route class and endpoint typing primitives."""
 
 from __future__ import annotations

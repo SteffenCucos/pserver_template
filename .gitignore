@@ -9,3 +9,4 @@ test-scafold/app/
 .mypy_cache/
 .pytest_cache/
 server_template.egg-info/
+local-api-test.db

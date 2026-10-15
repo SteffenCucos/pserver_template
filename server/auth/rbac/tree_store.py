@@ -1,3 +1,4 @@
+
 from models.base.id import Id
 
 from .permission_tree import PermissionTree

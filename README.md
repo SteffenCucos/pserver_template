@@ -1,5 +1,4 @@
-# Server Template
-
+# pserver_template
 A FastAPI server template with pre-built application structure, asynchronous backend-neutral persistence, authentication/RBAC support, and a CLI scaffolder.
 
 Use this repository as a starting point for small API services that need a clean baseline layout instead of starting from an empty FastAPI project.
@@ -86,8 +85,8 @@ class Project(Entity()):
 DAOs are the service-facing persistence layer. The generic `EntityDAO[TEntity]` wraps a backend-neutral `Repository[TEntity]` and owns shared entity lifecycle behavior such as ensuring IDs and updating timestamps before persistence.
 
 ```python
-from db.daos.entity_dao import EntityDAO
-from db.repository import Repository
+from persistence.daos.entity_dao import EntityDAO
+from persistence.repository import Repository
 
 
 class ProjectDAO(EntityDAO[Project]):
@@ -125,9 +124,9 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from db.dependencies import repository_dependency
-from db.pserialize_entity_serializer import PSerializeEntitySerializer
-from db.repository import Repository
+from persistence.dependencies import repository_dependency
+from persistence.pserialize_entity_serializer import PSerializeEntitySerializer
+from persistence.repository import Repository
 
 get_project_repository = repository_dependency(
     resource_name="projects",
@@ -306,10 +305,10 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-If `python` is not available on your PATH, install Python 3.8+ from https://www.python.org/ or use the Windows `py` launcher if present:
+If `python` is not available on your PATH, install Python 3.14+ from https://www.python.org/ or use the Windows `py` launcher if present:
 
 ```powershell
-py -3 -m venv .venv
+py -3.14 -m venv .venv
 . .venv\Scripts\Activate.ps1
 .venv\Scripts\pip.exe install -r requirements.txt
 ```
@@ -343,5 +342,9 @@ Install the development quality tools with the project and run the same checks u
 ```powershell
 python -m pip install -e ".[quality]"
 python -m mypy
-python -m ruff check server server_template
+python -m ruff check server server_template tests test-scafold --fix
+python -m pytest test-scafold/tests tests  
+$env:APP_DB_BACKEND = "sqlite"
+$env:APP_DB_URI = "sqlite:///local-api-test.db"
+$env:APP_DB_NAME = "local_api_test"
 ```

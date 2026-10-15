@@ -1,3 +1,4 @@
+
 """Route annotations used by the custom FastAPI router.
 
 `authenticated()` and `check_permission(...)` remain the public auth annotation
