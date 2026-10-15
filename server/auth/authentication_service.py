@@ -32,4 +32,5 @@ class AuthenticationService:
             await self.user_service.update_password_hash(
                 user, self.password_service.hash_password(password)
             )
+        
         return await self.session_service.create_session(user)

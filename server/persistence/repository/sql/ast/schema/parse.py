@@ -2,10 +2,11 @@
 import dataclasses
 import re
 
-from typing import get_type_hints
+from typing import cast, get_type_hints
 
 from models.base.entity import IdEntity
 
+from ...schema.types import PrimaryKey
 from .data_types import DataType
 from .exceptions import FieldParsingException, TableParsingException
 from .nodes.check_constraint_node import CheckConstraintNode
@@ -112,6 +113,7 @@ def _parse_field_constraints(table: TableNode, entity_type: type[IdEntity], colu
         case (None, None):
             pass
         case (None, _):
+            table_pk = cast(PrimaryKey, table_pk)
             name = table_pk.name
             columns = _resolve_columns(table, table_pk.columns, name)
             primary_key_node = PrimaryKeyNode(name, columns)
