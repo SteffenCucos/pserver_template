@@ -12,6 +12,7 @@ from server.persistence.repository.sql.ast.schema.nodes.column_node import Colum
 from server.persistence.repository.sql.ast.schema.nodes.foreign_key_node import ForeignKeyNode
 from server.persistence.repository.sql.ast.schema.nodes.index_node import IndexNode
 from server.persistence.repository.sql.ast.schema.nodes.primary_key_node import PrimaryKeyNode
+from server.persistence.repository.sql.ast.schema.nodes.schema_node import SchemaNode
 from server.persistence.repository.sql.ast.schema.nodes.table_node import TableNode
 from server.persistence.repository.sql.ast.schema.nodes.unique_constraint_node import (
     UniqueCheckConstraintNode,
@@ -20,7 +21,7 @@ from server.persistence.repository.sql.ast.schema.nodes.visitable import Visitab
 from server.persistence.repository.sql.ast.schema.schema_visitor import SchemaVisitor
 
 
-class RecordingVisitor(SchemaVisitor):
+class RecordingVisitor(SchemaVisitor[SchemaNode, list[tuple[str, str]]]):
     """
     Records each visit as (node kind, node name)
     """
@@ -55,6 +56,13 @@ class RecordingVisitor(SchemaVisitor):
     @override
     def visit_index(self, index: IndexNode) -> None:
         self.visits.append(("index", index.name))
+
+    @override
+    @classmethod
+    def rewrite(cls, visitable: SchemaNode) -> list[tuple[str, str]]:
+        visitor = cls()
+        visitable.accept(visitor)
+        return visitor.visits
 
 
 def accounts_table() -> TableNode:

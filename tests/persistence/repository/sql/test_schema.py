@@ -63,6 +63,7 @@ CREATE_TEST_TYPES_ENTITIES = (
     "list_f JSONB NOT NULL,\n"
     "bool_f BOOLEAN NOT NULL\n"
     ");"
+    "CREATE INDEX idx_test_types_entities_id ON test_types_entities (id);"
 )
 
 ALTER_TEST_TYPES_ENTITIES = (
@@ -90,7 +91,8 @@ def test_generate_schema_ddl_operations_creates_foreign_keys() -> None:
         "created_date TIMESTAMP NOT NULL,\n"
         "updated_date TIMESTAMP NOT NULL,\n"
         "fk_field TEXT NOT NULL\n"
-        ");",
+        ");"
+        "CREATE INDEX idx_test_fk_entities_id ON test_fk_entities (id);",
         "\n",
         ALTER_TEST_TYPES_ENTITIES,
         "ALTER TABLE test_fk_entities \n"
@@ -108,7 +110,8 @@ def test_generate_schema_ddl_operations_creates_unique_constraints() -> None:
         "created_date TIMESTAMP NOT NULL,\n"
         "updated_date TIMESTAMP NOT NULL,\n"
         "unique_field TEXT NOT NULL\n"
-        ");",
+        ");"
+        "CREATE INDEX idx_test_unique_entities_id ON test_unique_entities (id);",
         "\n",
         "ALTER TABLE test_unique_entities \n"
         "ADD CONSTRAINT pk_test_unique_entities_id PRIMARY KEY (id),\n"
@@ -124,7 +127,8 @@ def test_generate_schema_ddl_operations_creates_check_constraints() -> None:
         "created_date TIMESTAMP NOT NULL,\n"
         "updated_date TIMESTAMP NOT NULL,\n"
         "check_field INTEGER NOT NULL\n"
-        ");",
+        ");"
+        "CREATE INDEX idx_test_check_constraint_entities_id ON test_check_constraint_entities (id);",
         "\n",
         "ALTER TABLE test_check_constraint_entities \n"
         "ADD CONSTRAINT pk_test_check_constraint_entities_id PRIMARY KEY (id),\n"
@@ -142,6 +146,7 @@ def test_generate_schema_ddl_operations_creates_role_permission_schema() -> None
         "key TEXT NOT NULL,\n"
         "description TEXT\n"
         ");"
+        "CREATE INDEX idx_permissions_id ON permissions (id);"
         "CREATE INDEX idx_permissions_key ON permissions (key);",
 
         "CREATE TABLE roles (\n"
@@ -151,6 +156,7 @@ def test_generate_schema_ddl_operations_creates_role_permission_schema() -> None
         "name TEXT NOT NULL,\n"
         "description TEXT\n"
         ");"
+        "CREATE INDEX idx_roles_id ON roles (id);"
         "CREATE INDEX idx_roles_name ON roles (name);",
 
         "CREATE TABLE role_permissions (\n"
@@ -160,6 +166,7 @@ def test_generate_schema_ddl_operations_creates_role_permission_schema() -> None
         "role_id TEXT NOT NULL,\n"
         "permission_id TEXT NOT NULL\n"
         ");"
+        "CREATE INDEX idx_role_permissions_id ON role_permissions (id);"
         "CREATE INDEX idx_role_permissions_role_id ON role_permissions (role_id);",
 
         "CREATE TABLE users (\n"
@@ -173,6 +180,7 @@ def test_generate_schema_ddl_operations_creates_role_permission_schema() -> None
         "email TEXT NOT NULL,\n"
         "email_verified BOOLEAN NOT NULL\n"
         ");"
+        "CREATE INDEX idx_users_id ON users (id);"
         "CREATE INDEX idx_users_user_name ON users (user_name);"
         "CREATE INDEX idx_users_email ON users (email);",
 
@@ -183,6 +191,7 @@ def test_generate_schema_ddl_operations_creates_role_permission_schema() -> None
         "user_id TEXT NOT NULL,\n"
         "role_id TEXT NOT NULL\n"
         ");"
+        "CREATE INDEX idx_user_roles_id ON user_roles (id);"
         "CREATE INDEX idx_user_roles_user_id ON user_roles (user_id);",
 
         "\n",

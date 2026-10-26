@@ -12,11 +12,12 @@ if TYPE_CHECKING:
     from .nodes.foreign_key_node import ForeignKeyNode
     from .nodes.index_node import IndexNode
     from .nodes.primary_key_node import PrimaryKeyNode
+    from .nodes.schema_node import SchemaNode
     from .nodes.table_node import TableNode
     from .nodes.unique_constraint_node import UniqueCheckConstraintNode
 
 
-class SchemaVisitor(ABC):
+class SchemaVisitor[RewriteFrom: SchemaNode, RewriteTo](ABC):
     
     @abstractmethod
     def visit_column(self, column: ColumnNode) -> None:
@@ -44,4 +45,9 @@ class SchemaVisitor(ABC):
 
     @abstractmethod
     def visit_index(self, index: IndexNode) -> None:
+        pass
+
+    @classmethod
+    @abstractmethod
+    def rewrite(cls, visitable: RewriteFrom) -> RewriteTo:
         pass

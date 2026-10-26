@@ -8,10 +8,10 @@ from ..ast.schema.nodes.index_node import IndexNode
 from ..ast.schema.nodes.primary_key_node import PrimaryKeyNode
 from ..ast.schema.nodes.table_node import TableNode
 from ..ast.schema.nodes.unique_constraint_node import UniqueCheckConstraintNode
-from ..ast.schema.schema_visitor import SchemaVisitor
+from ..ast.schema.schema_generator import SchemaGenerator
 
 
-class SqliteVisitor(SchemaVisitor):
+class SqliteVisitor(SchemaGenerator):
     def __init__(self) -> None:
         self.columns: list[str] = []
         self.constraints: list[str] = []
@@ -84,11 +84,13 @@ class SqliteVisitor(SchemaVisitor):
         sql_parts.append(");")
         return "".join(sql_parts)
 
-    @staticmethod
-    def rewrite(table: TableNode) -> list[str]:
+    @override
+    def generate_create_sql(self) -> str:
+        return self._create_table_sql() + "".join(self.indexes)
+
+    @override
+    def generate_update_sql(self) -> str:
         """
-        Returns one statement per element (table first, then indexes), since sqlite3 executes one statement at a time.
+        SQLite does not support adding constraints via ALTER TABLE, so this is a no-op.
         """
-        visitor = SqliteVisitor()
-        table.accept(visitor)
-        return [visitor._create_table_sql(), *visitor.indexes]
+        return ""

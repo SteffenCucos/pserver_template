@@ -1,6 +1,6 @@
 
 from dataclasses import dataclass
-from typing import override
+from typing import Any, override
 
 from ..schema_visitor import SchemaVisitor
 from .check_constraint_node import CheckConstraintNode
@@ -8,12 +8,12 @@ from .column_node import ColumnNode
 from .foreign_key_node import ForeignKeyNode
 from .index_node import IndexNode
 from .primary_key_node import PrimaryKeyNode
+from .schema_node import SchemaNode
 from .unique_constraint_node import UniqueCheckConstraintNode
-from .visitable import Visitable
 
 
 @dataclass
-class TableNode(Visitable):
+class TableNode(SchemaNode):
     name: str
     columns: list[ColumnNode]
     primary_key: PrimaryKeyNode | None = None
@@ -23,7 +23,7 @@ class TableNode(Visitable):
     indexes: list[IndexNode] | None = None
 
     @override
-    def accept(self, visitor: SchemaVisitor) -> None:
+    def accept(self, visitor: SchemaVisitor[Any, Any]) -> None:
         visitor.visit_table(self)
         for column in self.columns:
             column.accept(visitor)

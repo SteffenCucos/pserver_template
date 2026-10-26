@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Runs the same checks as the CI quality job. Pass --fix to apply Ruff and file edge fixes.
+
+cd "$(dirname "$0")" || exit 1
+
+python=python3
+[[ -x .venv/bin/python ]] && python=.venv/bin/python
+
+case "${1:-}" in
+    "") ruff_args=(); edge_args=(--check) ;;
+    --fix) ruff_args=(--fix); edge_args=() ;;
+    *) echo "usage: ./lint [--fix]" >&2; exit 2 ;;
+esac
+
+paths=(server server_template tests test-scafold/tests scripts)
+
+status=0
+echo 'Running mypy checks...'
+"$python" -m mypy || status=1
+echo 'Running Ruff checks...'
+"$python" -m ruff check "${ruff_args[@]}" "${paths[@]}" || status=1
+echo 'Running file edge checks...'
+"$python" scripts/format_file_edges.py "${edge_args[@]}" "${paths[@]}" || status=1
+exit $status

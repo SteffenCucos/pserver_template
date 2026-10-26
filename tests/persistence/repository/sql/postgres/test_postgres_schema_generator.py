@@ -11,7 +11,9 @@ from server.persistence.repository.sql.ast.schema.nodes.table_node import TableN
 from server.persistence.repository.sql.ast.schema.nodes.unique_constraint_node import (
     UniqueCheckConstraintNode,
 )
-from server.persistence.repository.sql.postgres.postgres_visitor import PostgresVisitor
+from server.persistence.repository.sql.postgres.postgres_schema_generator import (
+    PostgresSchemaGenerator,
+)
 
 
 # DataType members render as their Postgres type names
@@ -27,7 +29,7 @@ def test_rewrite_creates_table_with_columns() -> None:
         [ColumnNode("id", DataType.TEXT, nullable=False), ColumnNode("name", DataType.TEXT, nullable=True)],
     )
 
-    create, update = PostgresVisitor.rewrite(table)
+    create, update = PostgresSchemaGenerator.rewrite(table)
 
     assert create == (
         "CREATE TABLE users (\n"
@@ -42,7 +44,7 @@ def test_rewrite_adds_primary_key_constraint() -> None:
     user_id = ColumnNode("id", DataType.TEXT, nullable=False)
     table = TableNode("users", [user_id], primary_key=PrimaryKeyNode("pk_users_id", [user_id]))
 
-    _, update = PostgresVisitor.rewrite(table)
+    _, update = PostgresSchemaGenerator.rewrite(table)
 
     assert update == (
         "ALTER TABLE users \n"
@@ -61,7 +63,7 @@ def test_rewrite_adds_foreign_key_constraint() -> None:
         ],
     )
 
-    _, update = PostgresVisitor.rewrite(table)
+    _, update = PostgresSchemaGenerator.rewrite(table)
 
     assert update == (
         "ALTER TABLE users \n"
@@ -77,7 +79,7 @@ def test_rewrite_adds_unique_constraint() -> None:
         unique_constraints=[UniqueCheckConstraintNode("uq_users_email", [email])],
     )
 
-    _, update = PostgresVisitor.rewrite(table)
+    _, update = PostgresSchemaGenerator.rewrite(table)
 
     assert update == (
         "ALTER TABLE users \n"
@@ -92,7 +94,7 @@ def test_rewrite_adds_check_constraint() -> None:
         check_constraints=[CheckConstraintNode("chk_products_price", "price > 0")],
     )
 
-    _, update = PostgresVisitor.rewrite(table)
+    _, update = PostgresSchemaGenerator.rewrite(table)
 
     assert update == (
         "ALTER TABLE products \n"
@@ -104,7 +106,7 @@ def test_rewrite_creates_indexes_on_the_table() -> None:
     email = ColumnNode("email", DataType.TEXT, nullable=True)
     table = TableNode("users", [email], indexes=[IndexNode("idx_users_email", [email])])
 
-    create, update = PostgresVisitor.rewrite(table)
+    create, update = PostgresSchemaGenerator.rewrite(table)
 
     assert create == (
         "CREATE TABLE users (\n"
@@ -133,7 +135,7 @@ def test_rewrite_adds_every_constraint_in_one_alter_statement() -> None:
         indexes=[IndexNode("idx_users_email", [email])],
     )
 
-    create, update = PostgresVisitor.rewrite(table)
+    create, update = PostgresSchemaGenerator.rewrite(table)
 
     assert create == (
         "CREATE TABLE users (\n"

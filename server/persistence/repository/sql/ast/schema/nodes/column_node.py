@@ -1,20 +1,20 @@
 
 from dataclasses import dataclass
-from typing import override
+from typing import Any, override
 
 from ..data_types import DataType
 from ..schema_visitor import SchemaVisitor
-from .visitable import Visitable
+from .schema_node import SchemaNode
 
 
 @dataclass
-class ColumnNode(Visitable): 
+class ColumnNode(SchemaNode): 
     name: str
     type: type | DataType | str
     nullable: bool
 
     @override
-    def accept(self, visitor: SchemaVisitor) -> None:
+    def accept(self, visitor: SchemaVisitor[Any, Any]) -> None:
         visitor.visit_column(self)
 
     @override

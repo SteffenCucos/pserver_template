@@ -329,9 +329,11 @@ def test_parse_entities_to_tables_creates_indexes() -> None:
     table = parse(IndexEntity)[0]
 
     assert table.indexes is not None
-    [index] = table.indexes
-    assert index.name == "idx_index_entities_value"
-    assert index.columns == [columns_by_name(table)["value"]]
+    id_index, value_index = table.indexes
+    assert id_index.name == "idx_index_entities_id"
+    assert id_index.columns == [columns_by_name(table)["id"]]
+    assert value_index.name == "idx_index_entities_value"
+    assert value_index.columns == [columns_by_name(table)["value"]]
 
 
 def test_parse_entities_to_tables_resolves_role_permission_relationships() -> None:
@@ -700,6 +702,7 @@ def test_parse_entities_to_tables_creates_table_indexes_before_column_indexes() 
 
     assert describe_column_constraints(table.indexes) == [
         ("idx_table_index_entities_first_second", ["first", "second"]),
+        ("idx_table_index_entities_id", ["id"]),
         ("idx_table_index_entities_third", ["third"]),
     ]
 

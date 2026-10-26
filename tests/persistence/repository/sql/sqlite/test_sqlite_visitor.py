@@ -32,28 +32,30 @@ def test_rewrite_creates_table_with_columns() -> None:
         [ColumnNode("id", DataType.TEXT, nullable=False), ColumnNode("name", DataType.TEXT, nullable=True)],
     )
 
-    statements = SqliteVisitor.rewrite(table)
+    create, update = SqliteVisitor.rewrite(table)
 
-    assert statements == [
+    assert create == (
         "CREATE TABLE users (\n"
         "id TEXT NOT NULL,\n"
         "name TEXT\n"
         ");"
-    ]
+    )
+    assert update == ""
 
 
 def test_rewrite_declares_primary_key_inline() -> None:
     user_id = ColumnNode("id", DataType.TEXT, nullable=False)
     table = TableNode("users", [user_id], primary_key=PrimaryKeyNode("pk_users_id", [user_id]))
 
-    statements = SqliteVisitor.rewrite(table)
+    create, update = SqliteVisitor.rewrite(table)
 
-    assert statements == [
+    assert create == (
         "CREATE TABLE users (\n"
         "id TEXT NOT NULL,\n"
         "CONSTRAINT pk_users_id PRIMARY KEY (id)\n"
         ");"
-    ]
+    )
+    assert update == ""
 
 
 def test_rewrite_declares_foreign_key_inline() -> None:
@@ -67,14 +69,15 @@ def test_rewrite_declares_foreign_key_inline() -> None:
         ],
     )
 
-    statements = SqliteVisitor.rewrite(table)
+    create, update = SqliteVisitor.rewrite(table)
 
-    assert statements == [
+    assert create == (
         "CREATE TABLE users (\n"
         "account_id TEXT,\n"
         "CONSTRAINT fk_users_account_id FOREIGN KEY (account_id) REFERENCES accounts (id)\n"
         ");"
-    ]
+    )
+    assert update == ""
 
 
 def test_rewrite_declares_unique_constraint_inline() -> None:
@@ -85,14 +88,15 @@ def test_rewrite_declares_unique_constraint_inline() -> None:
         unique_constraints=[UniqueCheckConstraintNode("uq_users_email", [email])],
     )
 
-    statements = SqliteVisitor.rewrite(table)
+    create, update = SqliteVisitor.rewrite(table)
 
-    assert statements == [
+    assert create == (
         "CREATE TABLE users (\n"
         "email TEXT,\n"
         "CONSTRAINT uq_users_email UNIQUE (email)\n"
         ");"
-    ]
+    )
+    assert update == ""
 
 
 def test_rewrite_declares_check_constraint_inline() -> None:
@@ -102,17 +106,18 @@ def test_rewrite_declares_check_constraint_inline() -> None:
         check_constraints=[CheckConstraintNode("chk_products_price", "price > 0")],
     )
 
-    statements = SqliteVisitor.rewrite(table)
+    create, update = SqliteVisitor.rewrite(table)
 
-    assert statements == [
+    assert create == (
         "CREATE TABLE products (\n"
         "price INTEGER,\n"
         "CONSTRAINT chk_products_price CHECK (price > 0)\n"
         ");"
-    ]
+    )
+    assert update == ""
 
 
-def test_rewrite_returns_each_index_as_a_separate_statement() -> None:
+def test_rewrite_creates_indexes_after_the_table() -> None:
     email = ColumnNode("email", DataType.TEXT, nullable=True)
     name = ColumnNode("name", DataType.TEXT, nullable=True)
     table = TableNode(
@@ -121,16 +126,16 @@ def test_rewrite_returns_each_index_as_a_separate_statement() -> None:
         indexes=[IndexNode("idx_users_email", [email]), IndexNode("idx_users_name", [name])],
     )
 
-    statements = SqliteVisitor.rewrite(table)
+    create, _ = SqliteVisitor.rewrite(table)
 
-    assert statements == [
+    assert create == (
         "CREATE TABLE users (\n"
         "email TEXT,\n"
         "name TEXT\n"
-        ");",
-        "CREATE INDEX idx_users_email ON users (email);",
-        "CREATE INDEX idx_users_name ON users (name);",
-    ]
+        ");"
+        "CREATE INDEX idx_users_email ON users (email);"
+        "CREATE INDEX idx_users_name ON users (name);"
+    )
 
 
 @pytest.mark.parametrize(
@@ -154,10 +159,18 @@ def test_type_rewriter_maps_to_sqlite_types(data_type: DataType, expected: str) 
 
 def test_generated_ddl_executes_against_sqlite() -> None:
     connection = sqlite3.connect(":memory:")
+    tables = parse_entities_to_tables([Permission, Role, RolePermission, User, UserRole])
 
-    for table in parse_entities_to_tables([Permission, Role, RolePermission, User, UserRole]):
-        for statement in SqliteVisitor.rewrite(SqliteTypeRewriter.rewrite(table)):
-            connection.execute(statement)
+    # The create SQL holds the table and its indexes, and execute() only runs one statement
+    for table in tables:
+        create, update = SqliteVisitor.rewrite(SqliteTypeRewriter.rewrite(table))
+        connection.executescript(create + update)
 
-    tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
-    assert tables == {"permissions", "roles", "role_permissions", "users", "user_roles"}
+    created_tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
+    assert created_tables == {"permissions", "roles", "role_permissions", "users", "user_roles"}
+    # SQLite's own indexes for primary keys and unique constraints have no SQL
+    created_indexes = {
+        row[0]
+        for row in connection.execute("SELECT name FROM sqlite_master WHERE type = 'index' AND sql IS NOT NULL")
+    }
+    assert created_indexes == {index.name for table in tables for index in table.indexes or []}

@@ -11,7 +11,7 @@ from .nodes.unique_constraint_node import UniqueCheckConstraintNode
 from .schema_visitor import SchemaVisitor
 
 
-class TableRewriter(SchemaVisitor):
+class TableRewriter(SchemaVisitor[TableNode, TableNode]):
     def __init__(self) -> None:
         super().__init__()
         self._table: TableNode | None = None
@@ -50,8 +50,10 @@ class TableRewriter(SchemaVisitor):
     def visit_index(self, index: IndexNode) -> None:
         self._indexes.append(index)
 
+    @override
     @classmethod
-    def rewrite(cls, table: TableNode) -> TableNode:
+    def rewrite(cls, visitable: TableNode) -> TableNode:
+        table = visitable
         rewriter = cls()
         table.accept(rewriter)
         new_table = TableNode(

@@ -4,7 +4,7 @@ from dataclasses import dataclass, fields
 from datetime import datetime as Datetime
 from typing import Any, ClassVar, Iterable
 
-from persistence.models import PRIMARY_KEY, field
+from persistence.models import INDEX, PRIMARY_KEY, field
 from persistence.repository.sql.schema.types import (
     CheckConstraint,
     ForeignKey,
@@ -20,7 +20,7 @@ from .id import Id, create_id
 @dataclass_transform(field_specifiers=(field,))
 @dataclass(kw_only=True)
 class IdEntity:
-    id: Id = field(PRIMARY_KEY, init=False)
+    id: Id = field(INDEX | PRIMARY_KEY, init=False)
     created_date: Datetime = field(init=False)
     updated_date: Datetime = field(init=False)
 

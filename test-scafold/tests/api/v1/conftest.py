@@ -111,7 +111,9 @@ def mongo_uri() -> Iterator[str]:
         server.close()
 
 
-@pytest.fixture(params=BACKENDS)
+# Under pytest-xdist's --dist loadgroup, each backend's tests run on one worker, so the backends
+# run in parallel while each still starts only one mongod or Postgres container
+@pytest.fixture(params=[pytest.param(backend, marks=pytest.mark.xdist_group(backend)) for backend in BACKENDS])
 def client(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
     assert APP_ROOT.exists(), f"application root does not exist: {APP_ROOT}"
     assert SERVER_ROOT.exists(), f"server package does not exist: {SERVER_ROOT}"

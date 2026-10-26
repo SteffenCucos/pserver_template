@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
 from ..schema_visitor import SchemaVisitor
 from .column_node import ColumnNode
-from .visitable import Visitable
-
+from .schema_node import SchemaNode
+    
 
 # TableNode imports ForeignKeyNode, so this is only needed for type checking
 if TYPE_CHECKING:
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class ForeignKeyNode(Visitable):
+class ForeignKeyNode(SchemaNode):
     name: str
     columns: list[ColumnNode]
     references: tuple[TableNode, list[ColumnNode]]
@@ -35,5 +35,5 @@ class ForeignKeyNode(Visitable):
                 raise ValueError("Column and reference types must match")
             
     @override
-    def accept(self, visitor: SchemaVisitor) -> None:
+    def accept(self, visitor: SchemaVisitor[Any, Any]) -> None:
         visitor.visit_foreign_key(self)

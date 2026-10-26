@@ -8,10 +8,10 @@ from ..ast.schema.nodes.index_node import IndexNode
 from ..ast.schema.nodes.primary_key_node import PrimaryKeyNode
 from ..ast.schema.nodes.table_node import TableNode
 from ..ast.schema.nodes.unique_constraint_node import UniqueCheckConstraintNode
-from ..ast.schema.schema_visitor import SchemaVisitor
+from ..ast.schema.schema_generator import SchemaGenerator
 
 
-class PostgresVisitor(SchemaVisitor):
+class PostgresSchemaGenerator(SchemaGenerator):
     def __init__(self) -> None:
         self.columns: list[str] = []
         self.constraints: list[str] = []
@@ -73,21 +73,8 @@ class PostgresVisitor(SchemaVisitor):
         idx_statement = f"CREATE INDEX {idx_name} ON {self.table} ({', '.join(idx_columns)});"
         self.indexes.append(idx_statement)
 
-    def compose_sql(self) -> str:
-        sql_parts: list[str] = []
-        if self.table:
-            sql_parts.append(f"CREATE TABLE {self.table} (\n")
-        sql_parts.extend(self.columns)
-        sql_parts.extend(self.constraints)
-        if sql_parts:
-            sql_parts[-1] = sql_parts[-1].rstrip(",\n") + "\n"
-        if self.table:
-            sql_parts.append(");")
-        if self.indexes:
-            sql_parts.extend(self.indexes)
-        return "".join(sql_parts)
-
-    def _create_sql(self) -> str:
+    @override
+    def generate_create_sql(self) -> str:
         """
         Create table with columns, types, and indexes
         """
@@ -102,7 +89,8 @@ class PostgresVisitor(SchemaVisitor):
             sql_parts.extend(self.indexes)
         return "".join(sql_parts)
 
-    def _update_sql(self) -> str:
+    @override
+    def generate_update_sql(self) -> str:
         """
         Update table with constraints, foreign keys, primary keys
         """
@@ -115,9 +103,3 @@ class PostgresVisitor(SchemaVisitor):
         if sql_parts:
             sql_parts[-1] = sql_parts[-1].rstrip(",\n") + "\n"
         return "".join(sql_parts)
-
-    @staticmethod
-    def rewrite(table: TableNode) -> tuple[str, str]:
-        visitor = PostgresVisitor()
-        table.accept(visitor)
-        return visitor._create_sql(), visitor._update_sql()
