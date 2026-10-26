@@ -1,0 +1,13 @@
+{
+  "exclude": [
+    "tests",
+    "test-scafold/tests",
+    "test-scafold/app"
+  ],
+  "executionEnvironments": [
+    {
+      "root": "server",
+      "extraPaths": ["server"]
+    }
+  ]
+}

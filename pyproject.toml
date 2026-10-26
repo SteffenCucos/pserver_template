@@ -7,7 +7,7 @@ name = "server-template"
 version = "0.1.0"
 description = "FastAPI server template with a CLI scaffolder."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.14"
 dependencies = [
     "fastapi",
     "uvicorn",
@@ -21,7 +21,7 @@ mongo = ["pymongo>=4.13", "pymongo_inmemory"]
 postgres = ["psycopg[binary]"]
 sqlite = ["aiosqlite"]
 db = ["pymongo>=4.13", "pymongo_inmemory", "psycopg[binary]", "aiosqlite"]
-test = ["pytest", "httpx", "argon2-cffi", "pymongo>=4.13", "pymongo_inmemory", "aiosqlite"]
+test = ["pytest", "pytest-xdist", "httpx", "argon2-cffi", "pymongo>=4.13", "pymongo_inmemory", "psycopg[binary]", "aiosqlite"]
 quality = ["mypy", "ruff"]
 
 [project.scripts]
@@ -37,11 +37,11 @@ testpaths = ["tests"]
 norecursedirs = ["test-scafold", "test-scafold/app"]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.14"
 packages = [
     "api",
     "auth",
-    "db",
+    "persistence",
     "models",
     "service",
     "users",
@@ -50,14 +50,15 @@ packages = [
 mypy_path = "server"
 strict = true
 ignore_missing_imports = true
+exclude = "^(tests|test-scafold/tests)(/|$)"
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py314"
 line-length = 100
 extend-exclude = ["test-scafold/app"]
 
 [tool.ruff.lint]
-select = ["E4", "E7", "E9", "F", "I"]
+select = ["E4", "E7", "E9", "F", "I", "W292"]
 
 [tool.ruff.lint.isort]
 known-first-party = [
@@ -72,3 +73,4 @@ known-first-party = [
 ]
 section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
 lines-between-types = 1
+lines-after-imports = 2

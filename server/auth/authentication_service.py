@@ -1,3 +1,4 @@
+
 from api.exceptions import UnauthorizedException
 from auth.password.password_service import PasswordService
 from auth.session.session import Session
@@ -31,4 +32,5 @@ class AuthenticationService:
             await self.user_service.update_password_hash(
                 user, self.password_service.hash_password(password)
             )
+        
         return await self.session_service.create_session(user)

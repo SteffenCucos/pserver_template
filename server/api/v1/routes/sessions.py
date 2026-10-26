@@ -1,3 +1,4 @@
+
 import logging
 
 from dataclasses import dataclass
@@ -18,6 +19,7 @@ from models.request_context import RequestContext
 from users.dependencies import get_user_service
 from users.user_service import UserService
 
+
 logger = logging.getLogger(__name__)
 
 router = Router(
@@ -35,7 +37,7 @@ async def get_sessions(
     for session in sessions:
         user = await user_service.get_user(session.user_id)
         user_name = user.user_name if user else "User DNE"
-        session_items.append("<li>" + session._id + ": " + user_name + "</li>")
+        session_items.append("<li>" + session.id + ": " + user_name + "</li>")
 
     session_list = "\n".join(session_items)
 
@@ -65,7 +67,7 @@ async def login(
     authentication_service: Annotated[AuthenticationService, Depends(get_authentication_service)],
 ) -> str:
     session = await authentication_service.authenticate(credentials.user_name, credentials.password)
-    return str(session._id)
+    return str(session.id)
 
 
 @router.get("/logout")

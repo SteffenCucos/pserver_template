@@ -1,3 +1,4 @@
+
 """Authentication domain package.
 
 Contains authentication-related primitives and subpackages used by the template

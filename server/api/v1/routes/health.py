@@ -1,8 +1,10 @@
+
 from fastapi import Depends
 
 from api.router import Router
 from api.v1 import base_route
 from service.health_service import HealthService
+
 
 router = Router(
     prefix=base_route + "/health",

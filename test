@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Runs the unit and API tests. Extra arguments go to pytest, e.g. ./test -k users
+# Passing a test path runs just that path, e.g. ./test tests/api/test_users_api.py
+# API tests run against every backend; Postgres needs Docker, or set APP_DB_BACKEND=mongo|sqlite
+
+cd "$(dirname "$0")" || exit 1
+
+python=python3
+[[ -x .venv/bin/python ]] && python=.venv/bin/python
+
+paths=(tests test-scafold/tests)
+for arg in "$@"; do
+    [[ -e "${arg%%::*}" ]] && paths=()
+done
+
+# One worker per API test backend; pass -n 0 to run in a single process, e.g. for --pdb
+exec "$python" -m pytest -q -n 3 --dist loadgroup "${paths[@]}" "$@"

@@ -7,5 +7,6 @@ aiosqlite # SQLite async driver
 requests # httpm
 pserialization # Serialization library
 pytest # testing
+pytest-xdist # parallel test execution
 httpx # FastAPI test client
 argon2-cffi # Argon2id password hashing
